@@ -1,10 +1,87 @@
-.DS_Store
-node_modules
-/build
-/.svelte-kit
-/package
+# Node dependencies
+node_modules/
 .env
 .env.*
-!.env.example
-vite.config.js.timestamp-*
-vite.config.ts.timestamp-*
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Deployment and build outputs
+.svelte-kit/
+build/
+dist/
+.vercel/
+.vercel_build_output/
+.next/
+out/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Testing artifacts
+coverage/
+*.lcov
+*.nyc_output/
+
+# Mongo memory server testing artifacts
+tmp/
+mongodb-memory-server-*.*
+dump/
+*.seed
+
+# Logs
+logs/
+*.log
+*.pid
+
+# Database config/secrets
+*dbConnect.js
+*dbConnect.ts
+database.sqlite
+
+# Output/test artifacts
+test-results/
+*.test.*
+*.spec.*
+__tests__/
+
+# Ignore static analysis output
+.vitest/
+.jest/
+.eslintcache
+
+# Ignore SvelteKit adapter output
+adapter-static/
+adapter-node/
+
+# Ignore environment/secret backup files
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Ignore runtime errors cache
+.cache/
+
+# Ignore package lock
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+
+# Ignore Radix wallet dev artifacts
+.radix/
+radix-*
+
+# Optional: Ignore all Docker stuff if present
+docker-compose*.yml
+Dockerfile*
+.dockerignore
+
