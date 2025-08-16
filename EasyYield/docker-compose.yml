@@ -1,0 +1,22 @@
+services:
+  mongodb:
+    image: mongo
+    container_name: easyyield-mongo
+    restart: unless-stopped
+    ports:
+      - '27017:27017' # Expose default MongoDB port
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: easyyield_admin
+      MONGO_INITDB_ROOT_PASSWORD: supersecretpassword
+      MONGO_INITDB_DATABASE: easyyield_db
+    volumes:
+      - mongo_data:/data/db # Persist data across container restarts
+    networks:
+      - easyyield-net
+
+volumes:
+  mongo_data:
+
+networks:
+  easyyield-net:
+    driver: bridge
