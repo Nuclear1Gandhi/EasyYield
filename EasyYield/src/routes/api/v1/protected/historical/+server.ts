@@ -20,7 +20,6 @@ export const GET: RequestHandler = async ({ url }) => {
       .skip(skip)
       .lean()
       .exec();
-    console.log(histories);
     return new Response(JSON.stringify({ histories }), { status: 200 });
   } catch (err) {
     return new Response(JSON.stringify({ error: String(err) }), {

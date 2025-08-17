@@ -8,7 +8,6 @@ import {
   afterAll,
   beforeEach,
 } from 'vitest';
-import { fetchTopOciswapPools } from '../../src/lib/server/api/ociswap/pools';
 
 // - Mock the fetchTopOciswapPools function so your test doesn't depend on Ociswap API
 vi.mock('../../src/lib/server/api/ociswap/pools', () => ({
@@ -34,7 +33,7 @@ import { MongoMemoryServer } from 'mongodb-memory-server';
 import { ProtocolModel } from '$server/mongo/models/Protocol';
 import { HistoricalYieldModel } from '$server/mongo/models/HistoricalYieldDoc';
 import { configDotenv } from 'dotenv';
-import { updateProtocolsJob } from '$server/workers/updateProtocols';
+import { updateProtocolsJob } from '$server/jobs/updateProtocols/updateProtocols';
 
 configDotenv();
 
@@ -62,7 +61,7 @@ describe('updateProtocolsJob', () => {
     await updateProtocolsJob();
 
     const protocols = await ProtocolModel.find();
-    expect(protocols.length).toEqual(2);
+    expect(protocols.length).toEqual(3);
     expect(protocols.map((p) => p.protocolId)).toContain(
       'component_rdx1testproto1'
     );
