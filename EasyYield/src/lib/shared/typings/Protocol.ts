@@ -1,5 +1,6 @@
 import type { Document } from 'mongoose';
 import type { OciswapPool } from './Ociswap';
+import type { CaviarNinePoolWithVault } from './CaviarNine';
 
 export enum ProtocolType {
   LSU_POOL = 'LSU_POOL',
@@ -7,12 +8,14 @@ export enum ProtocolType {
   DEX_PAIR = 'DEX_PAIR',
 }
 
-export interface ProtocolDoc extends Document {
+export type ProtocolDocRaw<R = OciswapPool | CaviarNinePoolWithVault> = {
   protocolId: string;
   name: string;
   type: ProtocolType;
   currentApy: String;
   tvl: String;
   lastUpdated: Date;
-  raw: OciswapPool;
-}
+  raw: R;
+};
+
+export type ProtocolDoc = Document & ProtocolDocRaw;
