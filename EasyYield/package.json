@@ -11,7 +11,8 @@
     "prepare": "husky",
     "preinstall:mongo": "node ./src/scripts/preinstall-mongo.js",
     "test": "vitest",
-    "seed:pro": "tsx ./src/scripts/seedProtocols"
+    "seed:pro": "tsx ./src/scripts/seedProtocols",
+    "update:pro": "tsx ./src/scripts/updateProtocols"
   },
   "devDependencies": {
     "@sveltejs/adapter-auto": "6.1.0",
@@ -48,6 +49,7 @@
     "@radixdlt/babylon-gateway-api-sdk": "1.10.1",
     "@radixdlt/radix-dapp-toolkit": "2.2.1",
     "@tanstack/svelte-query": "5.85.3",
+    "bignumber.js": "^9.3.1",
     "chart.js": "4.5.0",
     "cookie": "^1.0.2",
     "dotenv": "17.2.1",
