@@ -1,4 +1,5 @@
 import { CaviarNineAPIError } from '$server/api/caviarNine/constants';
+import { computeAndUpsertMetrics } from '$server/protocolMetrics/computeAndUpsertMetrics';
 import { updateCaviarNineProtocols } from './caviarNine';
 import { updateOciswapProtocols } from './ociswap';
 
@@ -10,12 +11,12 @@ export async function updateProtocolsJob() {
       console.warn('[WARN] Skipping: updateProtocolsJob still running.');
       return;
     }
-
     isJobRunning = true;
     console.log('[INFO] Starting protocol update job...');
 
     let totalUpdates = 0;
     let totalErrors = 0;
+    let updatedProtocolIds: string[] = [];
 
     // Update Ociswap pools
     try {
@@ -33,6 +34,7 @@ export async function updateProtocolsJob() {
       const caviarNineResult = await updateCaviarNineProtocols();
       totalUpdates += caviarNineResult.updates;
       totalErrors += caviarNineResult.errors;
+
       console.log(
         `[SUCCESS] CaviarNine: ${caviarNineResult.updates} updated, ${caviarNineResult.errors} errors`
       );
@@ -40,7 +42,6 @@ export async function updateProtocolsJob() {
       console.error('[ERROR] CaviarNine update failed completely:', error);
 
       if (error instanceof CaviarNineAPIError) {
-        // Handle specific API errors
         switch (error.code) {
           case 'MAX_RETRIES_EXCEEDED':
             console.error(
@@ -62,8 +63,21 @@ export async function updateProtocolsJob() {
             );
         }
       }
-
       totalErrors++;
+    }
+
+    // For all updated protocol IDs, compute and upsert metrics
+    updatedProtocolIds = [...new Set(updatedProtocolIds)]; // dedupe
+    for (const protocolId of updatedProtocolIds) {
+      try {
+        await computeAndUpsertMetrics(protocolId);
+      } catch (err) {
+        console.error(
+          `[ERROR] Failed to compute metrics for protocol ${protocolId}:`,
+          err
+        );
+        totalErrors++;
+      }
     }
 
     console.log(

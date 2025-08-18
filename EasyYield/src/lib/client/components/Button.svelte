@@ -1,9 +1,7 @@
 <script lang="ts">
   import { createEventDispatcher } from "svelte";
 
-  export let href: string | undefined = undefined;
-  export let disabled = false;
-  export let loading = false;
+  let { href, disabled, loading } = $props()
 
   const dispatch = createEventDispatcher();
 
@@ -19,7 +17,7 @@
     ><slot /></button>
 {/if}
 
-<style>
+<style lang='scss'>
   a,
   button {
     cursor: pointer;

@@ -5,7 +5,7 @@ const JWT_EXPIRES_IN = '24h'; // Adjust as needed
 
 export function generateJWT(walletAddress: string) {
   return jwt.sign(
-    { sub: walletAddress },   // sub = subject = user id or wallet
+    { sub: walletAddress }, // sub = subject = user id or wallet
     JWT_SECRET,
     { expiresIn: JWT_EXPIRES_IN }
   );

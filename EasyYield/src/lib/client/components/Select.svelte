@@ -75,7 +75,7 @@
   </ul>
 </div>
 
-<style>
+<style lang='scss'>
   .select {
     position: relative;
     width: 24rem;

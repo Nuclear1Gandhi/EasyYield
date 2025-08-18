@@ -6,14 +6,15 @@ import {
 } from '@radixdlt/radix-dapp-toolkit';
 import { GatewayApiClient } from '@radixdlt/babylon-gateway-api-sdk';
 import { loginWithJwt } from '$client/api/auth/auth';
+import { decodeJwt, getExistingJwt } from '$client/utils/jwt';
 
 const dAppDefinitionAddress =
-  'component_rdx1qdevdappdefinition0123456789abcdef';
+  'account_tdx_2_129a2ppwurxpevmnl752hv6pf3xlvsp6fmj3rzsdr8mtaumkryzuqs4';
 
 export function useRadixAuth() {
   const walletData = writable<any>(null);
   const rdt = RadixDappToolkit({
-    networkId: RadixNetwork.Mainnet,
+    networkId: RadixNetwork.Stokenet,
     applicationVersion: '1.0.0',
     applicationName: 'EasyYield',
     applicationDappDefinitionAddress: dAppDefinitionAddress,
@@ -28,10 +29,29 @@ export function useRadixAuth() {
   rdt.walletApi.walletData$.subscribe(async (data) => {
     walletData.set(data);
 
-    // Just always call backend to set cookie when a new wallet is connected (idempotent)
     if (data?.accounts?.length) {
       const address = data.accounts[0].address;
+
+      // Guard with sessionStorage (always available)
+      const lastAddr = sessionStorage.getItem('wallet-addr');
+      if (lastAddr === address) {
+        return; // already logged in for this address
+      }
+
+      // Guard with JWT match if the JWT cookie is readable
+      const jwt = getExistingJwt();
+      if (jwt) {
+        const decoded = decodeJwt(jwt);
+        if (decoded?.sub === address) {
+          // Already logged in with this address
+          sessionStorage.setItem('wallet-addr', address);
+          return;
+        }
+      }
+
+      // Otherwise, log in and update session marker
       await loginWithJwt(address);
+      sessionStorage.setItem('wallet-addr', address);
       console.info('Logged in with address:', address);
     }
   });
