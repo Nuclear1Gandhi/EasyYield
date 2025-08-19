@@ -6,21 +6,25 @@ import type {
   FeeVaultsResponse,
 } from '$shared/typings/CaviarNine';
 import {
-  ProtocolType,
-  type ProtocolDoc,
-  type ProtocolDocRaw,
-} from '$shared/typings/Protocol';
+  YieldSourceType,
+  type YieldSourceDocRaw,
+} from '$shared/typings/YieldSource';
 import { makeRateLimitedRequest } from '$shared/utils/rateLimiter/makeRateLimitedRequest';
 import {
   CAVIARNINE_API_CONFIG,
   CAVIARNINE_CORE_API_URL,
   CaviarNineAPIError,
 } from './constants';
+import { getMockCaviarNinePools } from './mockPools.js';
+
+// ✅ Check if we should use mocks
+const USE_MOCKS =
+  process.env.NODE_ENV === 'development' && process.env.USE_MOCK === 'true';
 
 export function processTicker(
   ticker: CaviarNineTicker,
   feeVaultsData: FeeVaultsResponse
-): ProtocolDocRaw<CaviarNinePoolWithVault> | null {
+): YieldSourceDocRaw<CaviarNinePoolWithVault> | null {
   // 1. Validation
   if (!ticker.pool_id || !ticker.base_currency || !ticker.target_currency) {
     console.warn('[VALIDATION] Invalid ticker:', ticker);
@@ -56,28 +60,52 @@ export function processTicker(
     feeVaultData: matchingVault,
   };
 
-  // 5. Build ProtocolDoc
-  const protocol: ProtocolDocRaw<CaviarNinePoolWithVault> = {
-    protocolId: pool.address,
+  // 5. Build YieldSourceDoc
+  const yieldSource: YieldSourceDocRaw<CaviarNinePoolWithVault> = {
+    yieldSourceId: pool.address,
     name: `CaviarNine ${pool.name}`,
-    type: pool.type === 'LSU' ? ProtocolType.LSU_POOL : ProtocolType.DEX_PAIR,
+    displayName: `CaviarNine ${pool.name}`,
+    type:
+      pool.type === 'LSU' ? YieldSourceType.LSU_POOL : YieldSourceType.DEX_PAIR,
     currentApy: pool.apy!,
     tvl: pool.tvl!,
     lastUpdated: new Date(),
     raw: pool,
+
+    /* Get hydrated later in bulk */
+    dappIcon: '',
+    dappName: '',
+    tokenIcons: [],
+    tokenSymbols: [],
   };
 
-  return protocol;
+  return yieldSource;
 }
 
 export async function fetchCaviarNinePools(): Promise<
-  ProtocolDocRaw<CaviarNinePoolWithVault>[]
+  YieldSourceDocRaw<CaviarNinePoolWithVault>[]
 > {
   const startTime = Date.now();
   console.log('[INFO] Starting CaviarNine pools fetch...');
 
+  // ✅ Return mock data in development
+  if (USE_MOCKS) {
+    console.log('[MOCK] Using mock CaviarNine pools instead of API');
+    // Simulate API delay for realistic testing
+    await new Promise((resolve) =>
+      setTimeout(resolve, 500 + Math.random() * 1000)
+    );
+
+    const mockPools = getMockCaviarNinePools();
+    const duration = Date.now() - startTime;
+    console.log(
+      `[SUCCESS] Fetched ${mockPools.length} CaviarNine pools (MOCK) in ${duration}ms`
+    );
+    return mockPools;
+  }
+
   try {
-    const protocols: ProtocolDocRaw<CaviarNinePoolWithVault>[] = [];
+    const yieldSources: YieldSourceDocRaw<CaviarNinePoolWithVault>[] = [];
     let tickersData: CaviarNineTicker[] = [];
     let pairsData: CaviarNinePair[] = [];
     let feeVaultsData: FeeVaultsResponse | null = null;
@@ -122,9 +150,9 @@ export async function fetchCaviarNinePools(): Promise<
     if (tickersData && Array.isArray(tickersData) && feeVaultsData) {
       for (const ticker of tickersData) {
         try {
-          const protocol = processTicker(ticker, feeVaultsData);
-          if (protocol) {
-            protocols.push(protocol);
+          const yieldSource = processTicker(ticker, feeVaultsData);
+          if (yieldSource) {
+            yieldSources.push(yieldSource);
           }
         } catch (error) {
           console.error(
@@ -137,25 +165,31 @@ export async function fetchCaviarNinePools(): Promise<
     }
 
     // Validate results
-    if (protocols.length === 0) {
+    if (yieldSources.length === 0) {
       throw new CaviarNineAPIError(
-        'No valid protocols extracted from CaviarNine data',
+        'No valid yield sources extracted from CaviarNine data',
         undefined,
-        'NO_PROTOCOLS_FOUND'
+        'NO_YIELD_SOURCES_FOUND'
       );
     }
 
     const duration = Date.now() - startTime;
     console.log(
-      `[SUCCESS] Fetched ${protocols.length} CaviarNine pools in ${duration}ms`
+      `[SUCCESS] Fetched ${yieldSources.length} CaviarNine pools in ${duration}ms`
     );
-    return protocols;
+    return yieldSources;
   } catch (error: any) {
     const duration = Date.now() - startTime;
     console.error(
       `[FATAL] CaviarNine pools fetch failed after ${duration}ms:`,
       error
     );
+
+    // ✅ Fallback to mocks in development if API fails
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[FALLBACK] Using mock CaviarNine pools due to API error');
+      return getMockCaviarNinePools();
+    }
 
     if (error instanceof CaviarNineAPIError) {
       throw error;

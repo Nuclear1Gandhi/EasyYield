@@ -1,5 +1,5 @@
-export interface ProtocolResponse {
-  protocolId: string;
+export interface YieldSourceResponse {
+  yieldSourceId: string;
   name: string;
   type: 'caviarnine' | 'xrd-staking' | 'ociswap';
   currentApy: string; // BigNumber string
@@ -10,27 +10,43 @@ export interface ProtocolResponse {
   tvlChange7d: string | null;
 }
 
-// Transform for UI components
-export interface ProtocolDisplayData {
+export interface YieldSourceDisplayData {
   id: string;
   name: string;
-  apy: string; // formatted for display
-  tvl: string; // formatted for display
-  change: string; // formatted change with +/-
+  displayName?: string;
+  type: string;
+  currentApy: string;
+  tvl: string;
+  lastUpdated: string;
+
+  // Icon/visual data from DB
+  dappIcon?: string;
+  dappName?: string;
+  tokenIcons: string[];
+  tokenSymbols: string[];
+
+  // Metrics (from YieldSourceMetrics join)
+  apy7dAvg?: string | null;
+  apyStd7d?: string | null;
+  tvlChange7d?: string | null;
+
+  // Computed frontend fields
+  apy: string; // formatted currentApy
+  change: string; // formatted tvlChange7d
   status: 'healthy' | 'stable' | 'volatile';
-  icon: string;
-  volatility?: number; // calculated from apyStd7d
+  volatility?: number;
 }
+
 // Portfolio data (you might have this from wallet integration)
-export interface PortfolioData {
+export interface YieldSourceData {
   totalValue: string;
   totalYield: string;
-  positions: PortfolioPosition[];
+  positions: YieldSourcePosition[];
   lastUpdated: string;
 }
 
-export interface PortfolioPosition {
-  protocolId: string;
+export interface YieldSourcePosition {
+  yieldSourceId: string;
   amount: string;
   value: string;
   apy: string;

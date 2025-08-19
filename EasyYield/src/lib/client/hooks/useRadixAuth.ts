@@ -7,14 +7,12 @@ import {
 import { GatewayApiClient } from '@radixdlt/babylon-gateway-api-sdk';
 import { loginWithJwt } from '$client/api/auth/auth';
 import { decodeJwt, getExistingJwt } from '$client/utils/jwt';
-
-const dAppDefinitionAddress =
-  'account_tdx_2_129a2ppwurxpevmnl752hv6pf3xlvsp6fmj3rzsdr8mtaumkryzuqs4';
+import { dAppDefinitionAddress } from '$lib/constants';
 
 export function useRadixAuth() {
   const walletData = writable<any>(null);
   const rdt = RadixDappToolkit({
-    networkId: RadixNetwork.Stokenet,
+    networkId: RadixNetwork.Mainnet,
     applicationVersion: '1.0.0',
     applicationName: 'EasyYield',
     applicationDappDefinitionAddress: dAppDefinitionAddress,

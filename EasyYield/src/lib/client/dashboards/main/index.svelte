@@ -3,17 +3,15 @@
   import { dashboardStore } from '$client/stores/dashboard';
   import { formatNumber } from '$shared/utils/dataTransform';
   import HeroStats from './HeroStats.svelte';
-  import ProtocolOverview from './ProtocolOverview.svelte';
   import StrategyRecommendations from './StrategyRecommendations.svelte';
   import ActivityFeed from './ActivityFeed.svelte';
-  import ProtocolComparisonTable from './YieldSourceComparisonTable.svelte';
-
+  import YieldSourceComparisonTable from './YieldSourceComparisonTable.svelte';
 
   // Subscribe to dashboard store
   let dashboardData = $derived($dashboardStore);
   dashboardStore.subscribe(value => dashboardData = value);
 
-  // Computed hero stats from real data
+  // ✅ Computed hero stats from YieldSourceDisplayData
   let heroStats = $derived([
     { 
       icon: 'tabler:wallet', 
@@ -31,33 +29,35 @@
     { 
       icon: 'tabler:star', 
       label: 'Best Yield Source', 
-      value: getBestProtocol() 
+      value: getBestYieldSource() 
     },
     { 
       icon: 'tabler:apps', 
       label: 'Active Yield Sources', 
-      value: dashboardData.protocols.length.toString() 
+      value: dashboardData.yieldSources.length.toString() 
     }
   ]);
 
-  function getBestProtocol(): string {
-    if (dashboardData.protocols.length === 0) return '--';
-    const best = dashboardData.protocols.reduce((prev, current) => 
-      parseFloat(current.apy) > parseFloat(prev.apy) ? current : prev
-    );
-    return best.name.slice(0,11);
+  function getBestYieldSource(): string {
+    if (dashboardData.yieldSources.length === 0) return '--';
+    
+    const best = dashboardData.yieldSources.reduce((prev, current) => {
+      const prevApy = parseFloat(prev.apy);
+      const currentApy = parseFloat(current.apy);
+      return currentApy > prevApy ? current : prev;
+    });
+    return best.name.slice(0, 11);
   }
 
   function getAverageApy(): string {
-    if (dashboardData.rawProtocols.length === 0) return '0.00';
+    if (dashboardData.yieldSources.length === 0) return '0.00';
     
-    const total = dashboardData.rawProtocols.reduce((sum, protocol) => {
-      return sum + parseFloat(protocol.currentApy || '0');
+    const total = dashboardData.yieldSources.reduce((sum, yieldSource) => {
+      return sum + parseFloat(yieldSource.apy || '0');
     }, 0);
     
-    return (total / dashboardData.rawProtocols.length).toFixed(2);
+    return (total / dashboardData.yieldSources.length).toFixed(2);
   }
-
   // Mock strategies (you can add this to your backend later)
   let strategies = [
     {
@@ -85,14 +85,14 @@
 
   // Mock activity (you can add this to your backend later)
   let recentActivity = [
-    { protocol: 'CaviarNine', action: 'APY updated', value: 'New rate', time: '2 hours ago' },
-    { protocol: 'Ociswap', action: 'Pool data refreshed', value: 'Latest TVL', time: '5 hours ago' },
-    { protocol: 'XRD Staking', action: 'Metrics computed', value: '7d average', time: '1 day ago' }
+    { yieldSource: 'CaviarNine', action: 'APY updated', value: 'New rate', time: '2 hours ago' },
+    { yieldSource: 'Ociswap', action: 'Pool data refreshed', value: 'Latest TVL', time: '5 hours ago' },
+    { yieldSource: 'XRD Staking', action: 'Metrics computed', value: '7d average', time: '1 day ago' }
   ];
 
-  function handleViewDetails(protocol: any) {
-    console.log('Navigate to:', protocol.name);
-    // TODO: Navigate to protocol details page
+  function handleViewDetails(yieldSource: any) {
+    console.log('Navigate to:', yieldSource.name);
+    // TODO: Navigate to yield source details page
   }
 
   function handleApplyStrategy(strategy: any) {
@@ -118,7 +118,7 @@
   {/if}
 
   <!-- Loading state for initial load -->
-  {#if dashboardData.loading.protocols && dashboardData.protocols.length === 0}
+  {#if dashboardData.loading.yieldSources && dashboardData.yieldSources.length === 0}
     <div class="loading-state">
       <Spinner size="8" />
       <p>Loading dashboard data...</p>
@@ -128,7 +128,7 @@
 
     <div class="dashboard-grid">
       <div class="main-content">
-        <ProtocolComparisonTable protocols={dashboardData.protocols}></ProtocolComparisonTable>
+        <YieldSourceComparisonTable yieldSources={dashboardData.yieldSources}  />
       </div>
       
       <div class="sidebar-content">

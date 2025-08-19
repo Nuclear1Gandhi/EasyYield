@@ -1,126 +1,89 @@
+// src/client/stores/dashboardStore.ts
 import { writable } from 'svelte/store';
 import { browser } from '$app/environment';
 import { apiService } from '$client/services/api';
 import type {
-  ProtocolResponse,
-  ProtocolDisplayData,
-  PortfolioData,
+  YieldSourceDisplayData,
+  YieldSourceData,
 } from '$shared/typings/Api';
-import { transformProtocolData } from '$shared/utils/dataTransform';
 
 type DashboardState = {
-  protocols: ProtocolDisplayData[];
-  rawProtocols: ProtocolResponse[];
-  portfolio: PortfolioData | null;
+  yieldSources: YieldSourceDisplayData[];
+  portfolio: YieldSourceData | null;
   loading: {
-    protocols: boolean;
+    yieldSources: boolean;
     portfolio: boolean;
   };
   errors: {
-    protocols: string | null;
+    yieldSources: string | null;
     portfolio: string | null;
   };
   lastUpdated: string | null;
 };
 
 const initialState: DashboardState = {
-  protocols: [],
-  rawProtocols: [],
+  yieldSources: [],
   portfolio: null,
-  loading: {
-    protocols: false,
-    portfolio: false,
-  },
-  errors: {
-    protocols: null,
-    portfolio: null,
-  },
+  loading: { yieldSources: false, portfolio: false },
+  errors: { yieldSources: null, portfolio: null },
   lastUpdated: null,
 };
 
 function createDashboardStore() {
   const { subscribe, update } = writable<DashboardState>(initialState);
 
-  const setLoading = (key: keyof DashboardState['loading'], value: boolean) => {
-    update((state) => ({
-      ...state,
-      loading: { ...state.loading, [key]: value },
-    }));
-  };
+  const setLoading = (key: keyof DashboardState['loading'], value: boolean) =>
+    update((s) => ({ ...s, loading: { ...s.loading, [key]: value } }));
 
   const setError = (
     key: keyof DashboardState['errors'],
     error: string | null
-  ) => {
-    update((state) => ({
-      ...state,
-      errors: { ...state.errors, [key]: error },
-    }));
-  };
+  ) => update((s) => ({ ...s, errors: { ...s.errors, [key]: error } }));
 
   return {
     subscribe,
     hydrate(data: {
-      protocols?: ProtocolResponse[];
-      portfolio?: PortfolioData | null;
+      yieldSources: YieldSourceDisplayData[]; // No more raw transform
     }) {
-      update((state) => {
-        const updates: Partial<DashboardState> = {
-          lastUpdated: new Date().toISOString(),
-        };
-
-        if (data.protocols) {
-          updates.rawProtocols = data.protocols;
-          updates.protocols = data.protocols.map(transformProtocolData);
-        }
-
-        if (data.portfolio !== undefined) {
-          updates.portfolio = data.portfolio;
-        }
-
-        return { ...state, ...updates };
-      });
+      update((state) => ({
+        ...state,
+        ...(data.yieldSources && { yieldSources: data.yieldSources }),
+        lastUpdated: new Date().toISOString(),
+      }));
     },
-
-    async loadProtocols() {
-      // Only run in browser
+    async loadYieldSources() {
       if (!browser) return;
-
-      setLoading('protocols', true);
-      setError('protocols', null);
+      setLoading('yieldSources', true);
+      setError('yieldSources', null);
 
       try {
-        const rawProtocols = await apiService.getProtocols();
-        const protocols = rawProtocols.map(transformProtocolData);
-
-        update((state) => ({
-          ...state,
-          rawProtocols,
-          protocols,
+        const yieldSources = await apiService.getYieldSources();
+        update((s) => ({
+          ...s,
+          yieldSources,
           lastUpdated: new Date().toISOString(),
         }));
-      } catch (error: any) {
-        const message = error.message || 'Failed to load protocols';
-        setError('protocols', message);
-        console.error('Failed to load protocols:', error);
+      } catch (err: any) {
+        const msg = err.message || 'Failed to load yield sources';
+        setError('yieldSources', msg);
+        console.error(msg, err);
       } finally {
-        setLoading('protocols', false);
+        setLoading('yieldSources', false);
       }
     },
 
     async loadPortfolio(walletAddress: string) {
       if (!browser) return;
-
       setLoading('portfolio', true);
       setError('portfolio', null);
 
       try {
         const portfolio = await apiService.getPortfolio(walletAddress);
-        update((state) => ({ ...state, portfolio }));
-      } catch (error: any) {
-        const message = error.message || 'Failed to load portfolio';
-        setError('portfolio', message);
-        console.error('Failed to load portfolio:', error);
+        update((s) => ({ ...s, portfolio }));
+      } catch (err: any) {
+        const msg = err.message || 'Failed to load portfolio';
+        setError('portfolio', msg);
+        console.error(msg, err);
       } finally {
         setLoading('portfolio', false);
       }
@@ -128,13 +91,9 @@ function createDashboardStore() {
 
     async refreshAll(walletAddress?: string) {
       if (!browser) return;
-
-      const promises = [this.loadProtocols()];
-      if (walletAddress) {
-        promises.push(this.loadPortfolio(walletAddress));
-      }
-
-      await Promise.allSettled(promises);
+      const tasks = [this.loadYieldSources()];
+      if (walletAddress) tasks.push(this.loadPortfolio(walletAddress));
+      await Promise.allSettled(tasks);
     },
   };
 }

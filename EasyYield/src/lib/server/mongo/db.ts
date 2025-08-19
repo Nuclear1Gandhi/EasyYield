@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { ProtocolModel } from './models/Protocol';
+import { YieldSourceModel } from './models/YieldSource';
 import { configDotenv } from 'dotenv';
 
 configDotenv();
@@ -15,11 +15,11 @@ export async function connectToDatabase() {
   });
 
   // Create indexes after connection
-  await ProtocolModel.collection.createIndex(
-    { protocolId: 1 },
+  await YieldSourceModel.collection.createIndex(
+    { yieldSourceId: 1 },
     { unique: true }
   );
-  await ProtocolModel.collection.createIndex({ type: 1, currentApy: -1 });
+  await YieldSourceModel.collection.createIndex({ type: 1, currentApy: -1 });
 
   isConnected = true;
 }

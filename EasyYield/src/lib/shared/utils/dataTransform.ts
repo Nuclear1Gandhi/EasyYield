@@ -1,7 +1,9 @@
+import { YIELD_SOURCE_MAPPINGS } from '$lib/constants';
 import type {
-  ProtocolDisplayData,
-  ProtocolResponse,
+  YieldSourceDisplayData,
+  YieldSourceResponse,
 } from '$shared/typings/Api';
+import type { YieldSourceType } from '$shared/typings/YieldSource';
 import BigNumber from 'bignumber.js';
 
 export function formatNumber(value: string | number, decimals = 2): string {
@@ -62,7 +64,7 @@ export function determineStatus(
   return 'stable';
 }
 
-export function getProtocolIcon(type: string): string {
+export function getYieldSource(type: string): string {
   switch (type) {
     case 'caviarnine':
       return 'tabler:coins';
@@ -75,17 +77,60 @@ export function getProtocolIcon(type: string): string {
   }
 }
 
-export function transformProtocolData(
-  protocol: ProtocolResponse
-): ProtocolDisplayData {
+export function transformYieldSourceData(
+  yieldSource: YieldSourceResponse
+): YieldSourceDisplayData {
   return {
-    id: protocol.protocolId,
-    name: protocol.name,
-    apy: formatApy(protocol.currentApy),
-    tvl: formatNumber(protocol.tvl),
-    change: calculateChange(protocol.currentApy, protocol.apy7dAvg),
-    status: determineStatus(protocol.apyStd7d, protocol.tvlChange7d),
-    icon: getProtocolIcon(protocol.type),
-    volatility: protocol.apyStd7d ? parseFloat(protocol.apyStd7d) : undefined,
+    id: yieldSource.yieldSourceId,
+    name: yieldSource.name,
+    apy: formatApy(yieldSource.currentApy),
+    tvl: formatNumber(yieldSource.tvl),
+    change: calculateChange(yieldSource.currentApy, yieldSource.apy7dAvg),
+    status: determineStatus(yieldSource.apyStd7d, yieldSource.tvlChange7d),
+    icon: getYieldSource(yieldSource.type),
+    volatility: yieldSource.apyStd7d
+      ? parseFloat(yieldSource.apyStd7d)
+      : undefined,
   };
+}
+
+export function generateFallbackName(resourceAddress: string): string {
+  const prefix = 'resource_';
+  if (resourceAddress.startsWith(prefix)) {
+    const withoutPrefix = resourceAddress.slice(prefix.length);
+    const parts = withoutPrefix.split('_');
+
+    if (parts.length >= 3) {
+      const hash = parts[2];
+      return hash.length > 8 ? hash.substring(0, 8) : hash;
+    }
+  }
+  return 'Resource';
+}
+
+export function extractResourceAddresses(text: string): string[] {
+  const resourceMatches = text.match(/resource_[a-z0-9_]+/gi) || [];
+  return resourceMatches;
+}
+
+export function getDappMapping(yieldSourceType: YieldSourceType) {
+  return (
+    YIELD_SOURCE_MAPPINGS[yieldSourceType] || {
+      name: 'Unknown',
+      dappDefinitionAddress: null,
+      fallbackIcon: '/icons/protocols/default.svg',
+    }
+  );
+}
+
+// Fallback for when metadata isn't available
+export function getFallbackTokenIcon(symbol: string): string {
+  const fallbacks: Record<string, string> = {
+    XRD: '/icons/tokens/xrd.svg',
+    USDC: '/icons/tokens/usdc.svg',
+    USDT: '/icons/tokens/usdt.svg',
+    LSULP: '/icons/tokens/lsulp.svg',
+  };
+
+  return fallbacks[symbol.toUpperCase()] || '/icons/tokens/generic.svg';
 }

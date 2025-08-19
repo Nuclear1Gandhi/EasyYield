@@ -1,6 +1,6 @@
 <script lang="ts">
   type Activity = {
-    protocol: string;
+    yieldSource: string;
     action: string;
     value: string;
     time: string;
@@ -19,7 +19,7 @@
     {#each activities as activity}
       <div class="activity-item">
         <div class="activity-content">
-          <strong>{activity.protocol}</strong>
+          <strong>{activity.yieldSource}</strong>
           <span>{activity.action}</span>
           <span class="activity-value">{activity.value}</span>
         </div>

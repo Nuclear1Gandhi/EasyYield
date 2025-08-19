@@ -8,6 +8,6 @@
   <h2>Button</h2>
 </section>
 <section>
-  <h2>Protocol Comparison Table</h2>
+  <h2>Yield source Comparison Table</h2>
 </section>
 

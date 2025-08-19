@@ -3,18 +3,18 @@ import type { RequestHandler } from '@sveltejs/kit';
 
 export const GET: RequestHandler = async ({ url }) => {
   try {
-    const protocolId = url.searchParams.get('protocolId');
+    const yieldSourceId = url.searchParams.get('yieldSourceId');
     const limit = Number(url.searchParams.get('limit') ?? '50');
     const skip = Number(url.searchParams.get('skip') ?? '0');
 
-    if (!protocolId) {
+    if (!yieldSourceId) {
       return new Response(
-        JSON.stringify({ error: 'protocolId query param required' }),
+        JSON.stringify({ error: 'yieldSourceId query param required' }),
         { status: 400 }
       );
     }
 
-    const histories = await HistoricalYieldModel.find({ protocolId })
+    const histories = await HistoricalYieldModel.find({ yieldSourceId })
       .sort({ timestamp: -1 })
       .limit(limit)
       .skip(skip)

@@ -4,7 +4,7 @@
   export type NavKey =
     | 'dashboard'
     | 'wallet'
-    | 'protocols'
+    | 'yield_sources'
     | 'yields'
     | 'settings';
 
@@ -19,7 +19,7 @@
   const navItems: { key: NavKey; label: string; icon: string }[] = [
     { key: 'dashboard', label: 'Dashboard', icon: 'tabler:layout-dashboard' },
     { key: 'wallet', label: 'Wallet', icon: 'tabler:wallet' },
-    { key: 'protocols', label: 'Yield Sources', icon: 'tabler:plug' },
+    { key: 'yield_sources', label: 'Yield Sources', icon: 'tabler:plug' },
     { key: 'yields', label: 'Yields', icon: 'tabler:chart-bar' },
     { key: 'settings', label: 'Settings', icon: 'tabler:settings' }
   ];

@@ -1,0 +1,81 @@
+// src/routes/api/yield-sources/+server.ts
+import { YieldSourceModel } from '$server/mongo/models/YieldSource';
+import { YieldSourceMetricsModel } from '$server/mongo/models/YieldSourceMetrics';
+import type { YieldSourceDisplayData } from '$shared/typings/Api';
+import type { RequestHandler } from '@sveltejs/kit';
+import BigNumber from 'bignumber.js';
+
+export const GET: RequestHandler = async () => {
+  try {
+    // 1. Fetch raw yieldSources
+    const yieldSources = await YieldSourceModel.find({}).lean();
+
+    // 2. Fetch matching metrics
+    const metrics = await YieldSourceMetricsModel.find({
+      yieldSourceId: { $in: yieldSources.map((p) => p._id.toString()) },
+    })
+      .lean()
+      .then((arr) =>
+        arr.reduce<Record<string, any>>((acc, m) => {
+          acc[m.yieldSourceId] = m;
+          return acc;
+        }, {})
+      );
+
+    // 3. Transform to YieldSourceDisplayData
+    const displayData: YieldSourceDisplayData[] = yieldSources.map((p) => {
+      const m = metrics[p._id.toString()] || {};
+
+      // Format APY and TVL
+      const apyBn = new BigNumber(p.currentApy || '0');
+      const tvlBn = new BigNumber(p.tvl || '0');
+      const changeBn = new BigNumber(m.tvlChange7d || '0');
+
+      const formattedApy = apyBn.toFixed(2);
+      const formattedTvl = '$' + tvlBn.toFormat(0);
+      const formattedChange =
+        (changeBn.gte(0) ? '+' : '') + changeBn.toFixed(2);
+
+      // Calculate status
+      const volatility = m.apyStd7d ? parseFloat(m.apyStd7d) : undefined;
+      let status: 'healthy' | 'stable' | 'volatile' = 'stable';
+      if (apyBn.gte(10) && (volatility || 0) < 2) status = 'healthy';
+      else if ((volatility || 0) > 5) status = 'volatile';
+
+      return {
+        id: p.yieldSourceId,
+        name: p.displayName || p.name,
+        displayName: p.displayName,
+        type: p.type,
+        currentApy: p.currentApy,
+        tvl: p.tvl,
+        lastUpdated: p.lastUpdated?.toISOString() || new Date().toISOString(),
+
+        // Icon data from DB
+        dappIcon: p.dappIcon,
+        dappName: p.dappName,
+        tokenIcons: p.tokenIcons || [],
+        tokenSymbols: p.tokenSymbols || [],
+
+        // Metrics
+        apy7dAvg: m.apy7dAvg ?? null,
+        apyStd7d: m.apyStd7d ?? null,
+        tvlChange7d: m.tvlChange7d ?? null,
+
+        // Formatted for frontend
+        apy: formattedApy,
+        change: formattedChange,
+        status,
+        volatility,
+      };
+    });
+
+    return new Response(JSON.stringify(displayData), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  } catch (err) {
+    console.error('DB Error', err);
+    return new Response('Error querying yield sources', { status: 500 });
+  }
+};

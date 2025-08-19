@@ -1,4 +1,3 @@
-import { JWT_KEY } from '$lib/constants';
 import { generateJWT } from '$server/auth/jwt';
 import type { RequestHandler } from '@sveltejs/kit';
 import { serialize } from 'cookie';
@@ -14,19 +13,19 @@ export const POST: RequestHandler = async ({ request }) => {
   const token = generateJWT(address);
 
   // Set JWT in a secure, HTTP-only cookie
-  const cookie = serialize(JWT_KEY, token, {
+  const cookie = serialize(process.env.JWT_KEY!, token, {
     path: '/',
-    httpOnly: true,      // Prevent JS/XSS access
-    secure: true,        // Only send over HTTPS
-    sameSite: 'strict',  // Strictest CSRF policy; adjust if needed
-    maxAge: 60 * 60      // 1 hour expiration; tweak as needed
+    httpOnly: true, // Prevent JS/XSS access
+    secure: true, // Only send over HTTPS
+    sameSite: 'strict', // Strictest CSRF policy; adjust if needed
+    maxAge: 60 * 60, // 1 hour expiration; tweak as needed
   });
 
   return new Response(JSON.stringify({ success: true }), {
     status: 200,
     headers: {
       'Set-Cookie': cookie,
-      'Content-Type': 'application/json'
-    }
+      'Content-Type': 'application/json',
+    },
   });
 };

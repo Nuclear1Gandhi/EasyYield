@@ -7,8 +7,6 @@
   // Load initial data
   dashboardStore.hydrate(data);
   onMount(() => {
-    console.log(data)
-    
     // Set up periodic refresh (every 5 minutes)
     const interval = setInterval(() => {
       dashboardStore.refreshAll();

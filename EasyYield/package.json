@@ -11,8 +11,9 @@
     "prepare": "husky",
     "preinstall:mongo": "node ./src/scripts/preinstall-mongo.js",
     "test": "vitest",
-    "seed:pro": "tsx ./src/scripts/seedProtocols",
-    "update:pro": "tsx ./src/scripts/updateProtocols"
+    "seed": "tsx ./src/scripts/seedYieldSources",
+    "update": "tsx ./src/scripts/updateYieldSources",
+    "find-dapps": "tsx --env-file=.env ./src/scripts/findDapps.ts"
   },
   "devDependencies": {
     "@sveltejs/adapter-auto": "6.1.0",

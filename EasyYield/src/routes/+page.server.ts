@@ -1,9 +1,9 @@
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ fetch, locals }) => {
-  const res = await fetch('/api/v1/protected/protocols');
-  if (!res.ok) throw new Error('Failed to load protocols');
-  const protocols = await res.json();
+export const load: PageServerLoad = async ({ fetch }) => {
+  const res = await fetch('/api/v1/protected/yield-sources');
+  if (!res.ok) throw new Error('Failed to load yield sources');
+  const yieldSources = await res.json();
   // const portfolio = await fetch('/api/portfolio/' + walletAddress);
   // const strategies = await fetch('/api/strategies');
   // const activity = await fetch('/api/activity');
@@ -15,5 +15,5 @@ export const load: PageServerLoad = async ({ fetch, locals }) => {
   //   portfolio = (await portfolioRes.ok) ? await portfolioRes.json() : null;
   // }
 
-  return { protocols };
+  return { yieldSources };
 };
