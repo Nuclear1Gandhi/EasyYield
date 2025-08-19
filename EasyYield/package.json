@@ -44,12 +44,12 @@
     "tslib": "2.8.1",
     "tsx": "^4.20.4",
     "typescript": "5.9.2",
-    "vite": "7.1.2",
     "vite-plugin-svelte": "3.0.1",
     "vitest": "3.2.4"
   },
   "type": "module",
   "dependencies": {
+    "vite": "7.1.2",
     "@iconify/svelte": "^5.0.1",
     "@radixdlt/babylon-gateway-api-sdk": "1.10.1",
     "@radixdlt/radix-dapp-toolkit": "2.2.1",
