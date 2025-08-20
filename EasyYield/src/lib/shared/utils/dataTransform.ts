@@ -44,7 +44,7 @@ export function calculateChange(current: string, avg7d: string | null): string {
 export function determineStatus(
   apyStd7d: string | null,
   tvlChange7d: string | null
-): 'healthy' | 'stable' | 'volatile' {
+): 'growing' | 'stable' | 'volatile' {
   // If no volatility data, assume stable
   if (!apyStd7d) return 'stable';
 
@@ -58,7 +58,7 @@ export function determineStatus(
 
   // Low volatility and positive/stable TVL
   if (volatility.lt(0.5) && tvlChange.gte(-2)) {
-    return 'healthy';
+    return 'growing';
   }
 
   return 'stable';

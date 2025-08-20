@@ -13,7 +13,7 @@ export async function computeAndUpsertMetrics(yieldSourceId: string) {
   if (!computed) return;
 
   await YieldSourceMetricsModel.updateOne(
-    { yieldSourceId: yieldSourceId },
+    { yieldSourceId },
     {
       $set: {
         ...computed,

@@ -13,7 +13,7 @@
 {#if href}
   <a class:loading class:disabled {href}><slot /></a>
 {:else}
-  <button class:loading class:disabled {disabled} on:click={handelClick}
+  <button class:loading class:disabled {disabled} onclick={handelClick}
     ><slot /></button>
 {/if}
 

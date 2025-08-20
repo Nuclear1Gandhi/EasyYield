@@ -25,6 +25,9 @@
         <img 
           src={iconUrl} 
           alt={tokenSymbols[index] || 'Token'} 
+          onerror={function() {
+            this.src = '/no-image-circle-min.png'
+          }}
         />
       {:else}
         <div class="token-placeholder">

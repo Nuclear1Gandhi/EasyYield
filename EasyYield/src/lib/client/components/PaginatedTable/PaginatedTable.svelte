@@ -3,7 +3,7 @@
   import { Button } from 'flowbite-svelte';
   import { goto } from '$app/navigation';
   import { browser } from '$app/environment';
-  import { untrack } from 'svelte';
+  import { untrack, type Snippet } from 'svelte';
   import { page } from '$app/state';
 
   type Props = {
@@ -12,11 +12,12 @@
       key: keyof T;
       label: string;
       sortable?: boolean;
-      render?: (item: T) => any;
+      render?: (item: any) => string | { component: Snippet, props: any };
     }>;
     pageSize?: number;
     title?: string;
     itemName?: string;
+    rowClass: (item: T, index: number) => string,
     syncWithUrl?: boolean; // New prop to enable URL sync
   };
 
@@ -26,6 +27,7 @@
     pageSize = 25, 
     title, 
     itemName = 'items',
+    rowClass,
     syncWithUrl = true 
   }: Props = $props();
 
@@ -34,7 +36,7 @@
   
   // Initialize state from URL params or defaults
   let currentPage = $state(1);
-  let sortBy: keyof T = $state(columns[0]?.key);
+  let sortBy: keyof T | undefined = $state(undefined);
   let sortAsc = $state(false);
   let currentPageSize = $state(pageSize);
   
@@ -64,7 +66,7 @@
     
     const url = new URL(page.url);
     url.searchParams.set('page', currentPage.toString());
-    url.searchParams.set('sortBy', sortBy.toString());
+    if (sortBy) url.searchParams.set('sortBy', sortBy.toString());
     url.searchParams.set('sortAsc', sortAsc.toString());
     url.searchParams.set('pageSize', currentPageSize.toString());
     
@@ -81,9 +83,15 @@
   $effect(() => {
     data; currentPage; sortBy; sortAsc; currentPageSize
     untrack(() => {
+      if (!sortBy) {
+        const startIndex = (currentPage - 1) * currentPageSize;
+        const endIndex = startIndex + currentPageSize;
+        displayedData = data.slice(startIndex, endIndex);
+        return;
+      }
       sortedData = [...data].sort((a, b) => {
-        const aVal = a[sortBy];
-        const bVal = b[sortBy];
+        const aVal = a[sortBy as keyof T];
+        const bVal = b[sortBy as keyof T];
         
         // Handle numeric sorting
         if (typeof aVal === 'string' && typeof bVal === 'string') {
@@ -201,11 +209,17 @@
       </thead>
       <tbody>
         {#each displayedData as item, index (index)}
-          <tr>
+          <tr class={rowClass ? rowClass(item, index) : ''}>
             {#each columns as column}
               <td>
                 {#if column.render}
-                  {@html column.render(item)}
+                  {@const rendered = column.render(item)}
+                  {#if typeof rendered === 'string'}
+                    {@html rendered}
+                  {:else}
+                    {@const { component: Component, props } = rendered}
+                    <Component {...props} />
+                  {/if}
                 {:else}
                   {item[column.key]}
                 {/if}
@@ -243,7 +257,7 @@
               color={currentPage === _page ? "primary" : "alternative"}
               onclick={() => goToPage(Number(_page))}
             >
-              {page}
+              {_page}
             </Button>
           {/if}
         {/each}
@@ -264,7 +278,7 @@
           Show:
           <select 
             value={currentPageSize} 
-            onchange={(e) => changePageSize(parseInt(e.target.value))}
+            onchange={(e) => changePageSize(parseInt(e.target?.value))}
           >
             <option value={10}>10</option>
             <option value={25}>25</option>

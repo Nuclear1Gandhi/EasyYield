@@ -15,40 +15,28 @@
   let heroStats = $derived([
     { 
       icon: 'tabler:wallet', 
-      label: 'Portfolio Value', 
-      value: dashboardData.portfolio?.totalValue 
-        ? `${formatNumber(dashboardData.portfolio.totalValue)} XRD`
-        : 'Connect Wallet',
+      label: 'Your Daily Yield Estimate', 
+      value: getUserDailyYield(), // "~2.3 XRD/day" based on holdings
       isPrimary: true 
     },
     { 
-      icon: 'tabler:trending-up', 
-      label: 'Average APY', 
-      value: getAverageApy() + '%'
+      icon: 'tabler-trending-up', 
+      label: 'Market Benchmark', 
+      value: getAverageApy() + '% avg'
     },
     { 
-      icon: 'tabler:star', 
-      label: 'Best Yield Source', 
-      value: getBestYieldSource() 
+      icon: 'tabler:trophy', 
+      label: 'Top Opportunity', 
+      value: getBestYieldWithApy() // "Ociswap XRD/USDT (12.4%)"
     },
     { 
-      icon: 'tabler:apps', 
-      label: 'Active Yield Sources', 
-      value: dashboardData.yieldSources.length.toString() 
+      icon: 'tabler:alert-triangle', 
+      label: 'Yield Changes Today', 
+      value: getYieldMovementSummary() // "3 up, 1 down" or "+0.2% avg"
     }
   ]);
 
-  function getBestYieldSource(): string {
-    if (dashboardData.yieldSources.length === 0) return '--';
-    
-    const best = dashboardData.yieldSources.reduce((prev, current) => {
-      const prevApy = parseFloat(prev.apy);
-      const currentApy = parseFloat(current.apy);
-      return currentApy > prevApy ? current : prev;
-    });
-    return best.name.slice(0, 11);
-  }
-
+  
   function getAverageApy(): string {
     if (dashboardData.yieldSources.length === 0) return '0.00';
     
@@ -57,6 +45,39 @@
     }, 0);
     
     return (total / dashboardData.yieldSources.length).toFixed(2);
+  }
+
+  function getUserDailyYield(): string {
+    if (!dashboardData.portfolio?.totalValue) return 'Connect Wallet';
+    
+    const avgApy = parseFloat(getAverageApy());
+    const dailyYield = (parseFloat(dashboardData.portfolio.totalValue) * avgApy / 100) / 365;
+    return `~${formatNumber(dailyYield)} XRD/day`;
+  }
+
+  function getBestYieldWithApy(): string {
+    if (dashboardData.yieldSources.length === 0) return '--';
+    
+    const best = dashboardData.yieldSources.reduce((prev, current) => {
+      return parseFloat(current.apy) > parseFloat(prev.apy) ? current : prev;
+    });
+    
+    return `${best.name.slice(0, 15)} (${parseFloat(best.apy).toFixed(1)}%)`;
+  }
+
+  function getYieldMovementSummary(): string {
+    // This would require 24h historical data - for now mock it
+    const movements = dashboardData.yieldSources.map(source => {
+      // Mock: random movement for demonstration
+      const change = (Math.random() - 0.5) * 2; // -1% to +1%
+      return change;
+    });
+    
+    const upCount = movements.filter(m => m > 0).length;
+    const downCount = movements.filter(m => m < 0).length;
+    
+    if (upCount === 0 && downCount === 0) return 'No changes';
+    return `${upCount} up, ${downCount} down`;
   }
   // Mock strategies (you can add this to your backend later)
   let strategies = [

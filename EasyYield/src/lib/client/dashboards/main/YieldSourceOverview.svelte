@@ -7,7 +7,7 @@
     apy: string;
     tvl: string;
     change: string;
-    status: 'healthy' | 'stable' | 'volatile';
+    status: 'growing' | 'stable' | 'volatile';
     icon: string;
   };
 
@@ -20,7 +20,7 @@
 
   function getBadgeColor(status: string) {
     switch (status) {
-      case 'healthy': return 'green';
+      case 'growing': return 'green';
       case 'stable': return 'blue';
       case 'volatile': return 'yellow';
       default: return 'gray';

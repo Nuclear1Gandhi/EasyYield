@@ -1,14 +1,10 @@
-// src/server/jobs/updateYieldSources/updateOciswapYieldSources.ts
 import BigNumber from 'bignumber.js';
 import { fetchTopOciswapPools } from '$server/api/ociswap/pools';
 import { HistoricalYieldModel } from '$server/mongo/models/HistoricalYieldDoc';
 import { YieldSourceModel } from '$server/mongo/models/YieldSource';
 import { YieldSourceType } from '$shared/typings/YieldSource';
-import {
-  cleanYieldSourceNameWithCache,
-  extractTokenSymbols,
-} from '$server/utils/yieldSourceNameCleaner';
-import { getDappMapping, getYieldSource } from '$shared/utils/dataTransform';
+import { cleanYieldSourceNameWithCache } from '$server/utils/yieldSourceNameCleaner';
+import { getDappMapping } from '$shared/utils/dataTransform';
 
 export async function updateOciswapYieldSources(): Promise<{
   updates: number;

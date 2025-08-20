@@ -7,23 +7,24 @@
     style?: string;
   }
 
-  export let label: string;
-  export let options: Option[] = [];
-  export let disabled = false;
-
+  type Props = {label: string, options: Option[], disabled: boolean}
+  let { label, options, disabled }: Props = $props()
   let active = false;
   let selected: { value: string; label: string; style?: string } = {
     label,
     value: "",
   };
+
   // if label changes or options changes to empty, reset selected
-  $: if (label || !options[0]) {
-    selected = {
-      label: label,
-      value: "",
-      style: "",
-    };
-  }
+  $effect(() => {
+    if (label || !options[0]) {
+      selected = {
+        label: label,
+        value: "",
+        style: "",
+      };
+    }
+  })
 
   const handleClick = () => {
     active = !active;
@@ -40,7 +41,7 @@
 
 <div class="select">
   <button
-    on:click={handleClick}
+    onclick={handleClick}
     class="button"
     role="combobox"
     aria-label="Select an Account"
@@ -58,8 +59,8 @@
         role="option"
         aria-selected="false"
         style={option.style}
-        on:click={() => handleOptionClick(option)}
-        on:keypress={(e) => {
+        onclick={() => handleOptionClick(option)}
+        onkeypress={(e) => {
           if (e.key === "Enter") handleOptionClick(option);
         }}>
         <label for="${option.label}">

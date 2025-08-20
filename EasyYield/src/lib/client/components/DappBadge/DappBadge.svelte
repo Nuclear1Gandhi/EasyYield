@@ -20,6 +20,9 @@
     <img 
       src={dappIcon} 
       alt={dappName || 'DApp'}
+      onerror={function() {
+        this.src = '/no-image-circle-min.png'
+      }}
     />
   {:else}
     <div class="dapp-placeholder">
@@ -30,7 +33,7 @@
 
 <style lang="scss">
 .dapp-badge {
-  border-radius: 50%;
+  border-radius: 4px;
   border: 1px solid var(--border);
   background: var(--surface-1);
   overflow: hidden;

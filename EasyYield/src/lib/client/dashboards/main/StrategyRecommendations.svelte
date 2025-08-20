@@ -49,7 +49,7 @@
           size="sm" 
           color="primary" 
           class="w-full"
-          on:click={() => onApplyStrategy?.(strategy)}
+          onclick={() => onApplyStrategy?.(strategy)}
         >
           Apply Strategy
         </Button>

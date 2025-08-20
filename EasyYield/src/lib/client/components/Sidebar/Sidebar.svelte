@@ -35,7 +35,7 @@
       class="nav-item {active === item.key ? 'active' : ''}"
       type="button"
       aria-current={active === item.key ? 'page' : undefined}
-      on:click={() => select(item.key)}
+      onclick={() => select(item.key)}
     >
       <Icon icon={item.icon} width="24" height="24" class="nav-icon" aria-hidden="true" />
       <span class="nav-label">{item.label}</span>

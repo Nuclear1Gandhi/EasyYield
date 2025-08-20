@@ -24,7 +24,7 @@
       "header header"
       "sidebar main"
       "drawer drawer";
-    grid-template-columns: 280px 1fr;
+    grid-template-columns: 0px 1fr;
     grid-template-rows: auto 1fr auto;
     min-height: 100dvh;
     background: var(--bg);
@@ -51,15 +51,4 @@
     min-width: 0;
   }
 
-  .right-panel {
-    position: sticky;
-    top: 64px;
-    align-self: start;
-    height: fit-content;
-    background: var(--surface-1);
-    border: 1px solid var(--border-weak);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow-1);
-    padding: 12px;
-  }
 </style>

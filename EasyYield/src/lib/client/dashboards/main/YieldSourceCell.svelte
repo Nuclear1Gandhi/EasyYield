@@ -16,17 +16,17 @@
   />
   <div class="yield-source-info">
     <div class="name-row">
+      <span class="yield-source-name" title={row.name}>
+        {row.displayName || row.name}
+      </span>
       <DappBadge
         dappIcon={row.dappIcon} 
         dappName={row.dappName}
         size="sm" 
       />
-      <span class="yield-source-name" title={row.name}>
-        {row.displayName || row.name}
-      </span>
     </div>
     <div class="yield-source-type">
-      {row.type}
+      <!-- {row.type} -->
     </div>
   </div>
 </div>

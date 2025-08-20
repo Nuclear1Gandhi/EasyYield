@@ -58,7 +58,6 @@ export async function batchProcessYieldSources(
   }));
 
   const iconResults = await batchProcessIcons(iconProcessingData);
-
   // Step 4: Combine results
   const finalResults = new Map<string, YieldSourceProcessingResult>();
   yieldSources.forEach(({ id }, index) => {

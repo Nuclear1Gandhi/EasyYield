@@ -33,7 +33,7 @@ export interface YieldSourceDisplayData {
   // Computed frontend fields
   apy: string; // formatted currentApy
   change: string; // formatted tvlChange7d
-  status: 'healthy' | 'stable' | 'volatile';
+  status: 'growing' | 'stable' | 'volatile';
   volatility?: number;
 }
 
@@ -50,4 +50,10 @@ export interface YieldSourcePosition {
   amount: string;
   value: string;
   apy: string;
+}
+
+export interface YieldSourceHistoricalData {
+  date: string;
+  apy: string;
+  tvl: string;
 }

@@ -33,7 +33,7 @@ export async function processYieldSourceIcons(
     );
     return matchingSymbol
       ? getFallbackTokenIcon(matchingSymbol)
-      : '/icons/tokens/generic.svg';
+      : '/no-image-circle-min.png';
   });
 
   return {
