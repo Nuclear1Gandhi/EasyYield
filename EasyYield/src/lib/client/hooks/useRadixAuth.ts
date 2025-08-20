@@ -8,23 +8,27 @@ import { GatewayApiClient } from '@radixdlt/babylon-gateway-api-sdk';
 import { loginWithJwt } from '$client/api/auth/auth';
 import { decodeJwt, getExistingJwt } from '$client/utils/jwt';
 import { dAppDefinitionAddress } from '$lib/constants';
+import { rdt } from '$lib/stores';
 
 export function useRadixAuth() {
   const walletData = writable<any>(null);
-  const rdt = RadixDappToolkit({
+  const toolkit = RadixDappToolkit({
     networkId: RadixNetwork.Mainnet,
     applicationVersion: '1.0.0',
     applicationName: 'EasyYield',
     applicationDappDefinitionAddress: dAppDefinitionAddress,
   });
+  rdt.set(toolkit);
 
-  const gatewayApi = GatewayApiClient.initialize(rdt.gatewayApi.clientConfig);
+  const gatewayApi = GatewayApiClient.initialize(
+    toolkit.gatewayApi.clientConfig
+  );
 
   // Request at least one account
-  rdt.walletApi.setRequestData(DataRequestBuilder.accounts().atLeast(1));
+  toolkit.walletApi.setRequestData(DataRequestBuilder.accounts().atLeast(1));
 
   // Subscribe to wallet connect
-  rdt.walletApi.walletData$.subscribe(async (data) => {
+  toolkit.walletApi.walletData$.subscribe(async (data) => {
     walletData.set(data);
 
     if (data?.accounts?.length) {

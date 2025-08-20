@@ -1,7 +1,11 @@
 <script lang="ts">
   import '$client/styles/app.scss'
   import Header from '$client/components/Header/Header.svelte';
+  import { injectSpeedInsights } from '@vercel/speed-insights/sveltekit';
+  import { injectAnalytics } from '@vercel/analytics/sveltekit'
 
+  injectSpeedInsights();
+  injectAnalytics();
 </script>
 
 <div class="app-shell">

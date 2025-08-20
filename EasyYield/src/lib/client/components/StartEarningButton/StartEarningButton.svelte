@@ -1,64 +1,84 @@
 <script lang="ts">
-  import { Button } from 'flowbite-svelte';
-  import { ArrowRightOutline, LinkBreakOutline } from 'flowbite-svelte-icons';
+  import { Button, Spinner } from 'flowbite-svelte';
+  import { ArrowRightOutline, WalletOutline  } from 'flowbite-svelte-icons';
   import type { YieldSourceDisplayData } from '$shared/typings/Api';
+  import { rdt, transactionState } from '$lib/stores';
+  import { mintLsu } from '$client/methodCalls/mintLSU';
+  import { stakeXrd } from '$client/methodCalls/stakeXrd';
+  import { addLiquidity } from '$client/methodCalls/addLiquidity';
 
-  let { source }: { 
-    source: YieldSourceDisplayData;
-  } = $props();
+  let { source }: { source: YieldSourceDisplayData } = $props();
 
-  // let walletState = $derived($radixConnectStore);
+  
+  // Reactive state
+  let isConnected = $derived(!!$rdt);
+  let isProcessing = $derived($transactionState.isProcessing);
 
-  async function onStartEarning() {
-    // // First ensure wallet is connected
-    // if (!walletState.isConnected) {
-    //   await radixConnectStore.connectWallet();
-    //   return;
-    // }
+  async function handleStartEarning() {
+    if (!isConnected) {
+      // The wallet connection is handled automatically by the hook
+      return;
+    }
 
-    // // Route to appropriate earning flow based on source type
-    // switch (source.type) {
-    //   case 'xrd-staking':
-    //     await handleXrdStaking();
-    //     break;
-    //   case 'lsu':
-    //     await handleLsuMinting();
-    //     break;
-    //   case 'dex':
-    //     await handleLiquidityProvision();
-    //     break;
-    //   default:
-    //     console.log('Start earning with:', source.name);
-    // }
-  }
+    // For MVP, use fixed amounts - later you can add amount input modals
+    const defaultAmount = '10'; // 10 XRD default
 
-  function getButtonText(sourceType: string, dappName?: string): string {
-    switch (sourceType) {
-      case 'xrd-staking':
-        return 'Stake XRD';
-      case 'lsu':
-        return 'Get LSU';
-      case 'dex':
-        return 'Add Liquidity';
-      default:
-        return 'Start Earning';
+    try {
+      switch (source.type) {
+        case 'xrd-staking':
+          await stakeXrd({
+            validatorAddress: source.id,
+            amount: defaultAmount
+          });
+          break;
+        case 'lsu':
+          await mintLsu({
+            poolAddress: source.id,
+            xrdAmount: defaultAmount
+          });
+          break;
+        case 'dex':
+          await addLiquidity({
+            poolAddress: source.id,
+            token1Amount: defaultAmount,
+            token2Amount: defaultAmount, // This should be calculated based on pool ratio
+            token1Address: 'resource_rdx1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxradxrd', // XRD
+            token2Address: 'resource_rdx1tkk83magp3gjyxrpskfsqwkg4g949rmcjee4tu2xmw93ltw2cz94sq' // Example token
+          });
+          break;
+        default:
+          console.log('Start earning with:', source.name);
+      }
+    } catch (error) {
+      console.error('Transaction failed:', error);
     }
   }
 
-  function isExternal(sourceType: string): boolean {
-    return sourceType !== 'strategy'; // Most will be external links
+  function getButtonText(): string {
+    if (isProcessing) return 'Processing...';
+    if (!isConnected) return 'Connect Wallet';
+    
+    switch (source.type) {
+      case 'xrd-staking': return 'Stake XRD';
+      case 'lsu': return 'Mint LSU';
+      case 'dex': return 'Add Liquidity';
+      default: return 'Start Earning';
+    }
   }
 </script>
 
 <Button 
-  color="primary" 
+  color={!isConnected ? "alternative" : "primary"}
   size="sm" 
-  onclick={onStartEarning}
+  onclick={handleStartEarning}
   class="start-earning-btn"
+  disabled={isProcessing}
 >
-  {getButtonText(source.type, source.dappName)}
-  {#if isExternal(source.type)}
-    <LinkBreakOutline class="w-3 h-3 ml-1" />
+  {getButtonText()}
+  {#if isProcessing}
+    <Spinner class="w-3 h-3 ml-1" />
+  {:else if !isConnected}
+    <WalletOutline class="w-3 h-3 ml-1" />
   {:else}
     <ArrowRightOutline class="w-3 h-3 ml-1" />
   {/if}
@@ -67,6 +87,6 @@
 <style lang="scss">
   :global(.start-earning-btn) {
     white-space: nowrap;
-    min-width: 100px;
+    min-width: 120px;
   }
 </style>

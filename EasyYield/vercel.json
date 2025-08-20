@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/update-yield-sources",
+      "schedule": "0 */2 * * *"
+    }
+  ]
+}
