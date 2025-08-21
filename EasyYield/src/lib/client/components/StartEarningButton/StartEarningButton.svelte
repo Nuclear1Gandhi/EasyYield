@@ -6,9 +6,9 @@
   import { mintLsu } from '$client/methodCalls/mintLSU';
   import { stakeXrd } from '$client/methodCalls/stakeXrd';
   import { addLiquidity } from '$client/methodCalls/addLiquidity';
+  import { YieldSourceType } from '$shared/typings/YieldSource';
 
   let { source }: { source: YieldSourceDisplayData } = $props();
-
   
   // Reactive state
   let isConnected = $derived(!!$rdt);
@@ -25,19 +25,19 @@
 
     try {
       switch (source.type) {
-        case 'xrd-staking':
+        case YieldSourceType.VALIDATOR:
           await stakeXrd({
             validatorAddress: source.id,
             amount: defaultAmount
           });
           break;
-        case 'lsu':
+        case YieldSourceType.LSU_POOL:
           await mintLsu({
             poolAddress: source.id,
             xrdAmount: defaultAmount
           });
           break;
-        case 'dex':
+        case YieldSourceType.DEX_PAIR:
           await addLiquidity({
             poolAddress: source.id,
             token1Amount: defaultAmount,
@@ -59,9 +59,9 @@
     if (!isConnected) return 'Connect Wallet';
     
     switch (source.type) {
-      case 'xrd-staking': return 'Stake XRD';
-      case 'lsu': return 'Mint LSU';
-      case 'dex': return 'Add Liquidity';
+      case YieldSourceType.VALIDATOR: return 'Stake XRD';
+      case YieldSourceType.LSU_POOL: return 'Mint LSU';
+      case YieldSourceType.DEX_PAIR: return 'Add Liquidity';
       default: return 'Start Earning';
     }
   }
@@ -85,8 +85,15 @@
 </Button>
 
 <style lang="scss">
+  @use 'sass:map';
+  @use '$client/styles/variables' as *;
   :global(.start-earning-btn) {
     white-space: nowrap;
     min-width: 120px;
+    cursor: pointer;
+    display: flex;
+    justify-content: flex-end;
+    width: 100%;
+    color: $color-primary;
   }
 </style>

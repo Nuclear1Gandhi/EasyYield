@@ -1,4 +1,3 @@
-// src/routes/api/yield-sources/+server.ts
 import { YieldSourceModel } from '$server/mongo/models/YieldSource';
 import { YieldSourceMetricsModel } from '$server/mongo/models/YieldSourceMetrics';
 import type { YieldSourceDisplayData } from '$shared/typings/Api';
@@ -26,12 +25,11 @@ export const GET: RequestHandler = async () => {
       );
 
     // 3. Transform to YieldSourceDisplayData
-    console.log(metrics);
-    const displayData: YieldSourceDisplayData[] = yieldSources.map((p) => {
-      const m = metrics[p._id.toString()] || {};
+    const displayData: YieldSourceDisplayData[] = yieldSources.map((s) => {
+      const m = metrics[s._id.toString()] || {};
       // Format APY and TVL
-      const apyBn = new BigNumber(p.currentApy || '0');
-      const tvlBn = new BigNumber(p.tvl || '0');
+      const apyBn = new BigNumber(s.currentApy || '0');
+      const tvlBn = new BigNumber(s.tvl || '0');
       const changeBn = new BigNumber(m.tvlChange7d || '0');
 
       const formattedApy = apyBn.toFixed(2);
@@ -42,23 +40,43 @@ export const GET: RequestHandler = async () => {
       // Calculate status
       const volatility = m.apyStd7d ? parseFloat(m.apyStd7d) : undefined;
       let status: 'growing' | 'stable' | 'volatile' = 'stable';
-      if (apyBn.gte(10) && (volatility || 0) < 2) status = 'growing';
-      else if ((volatility || 0) > 5) status = 'volatile';
+
+      if (s.isComposite && s.yieldSubSources) {
+        // For composite sources, consider complexity in volatility assessment
+        const baseVolatility = volatility || 0;
+        const complexityFactor =
+          s.yieldSubSources.filter((sub) => sub.isActive).length * 0.3;
+        const adjustedVolatility = baseVolatility + complexityFactor;
+
+        if (apyBn.gte(8) && adjustedVolatility < 3) {
+          status = 'growing';
+        } else if (adjustedVolatility > 6) {
+          status = 'volatile';
+        } else {
+          status = 'stable';
+        }
+      } else {
+        if (apyBn.gte(10) && (volatility || 0) < 2) {
+          status = 'growing';
+        } else if ((volatility || 0) > 5) {
+          status = 'volatile';
+        }
+      }
 
       return {
-        id: p.yieldSourceId,
-        name: p.displayName || p.name,
-        displayName: p.displayName,
-        type: p.type,
-        currentApy: p.currentApy,
-        tvl: p.tvl,
-        lastUpdated: p.lastUpdated?.toISOString() || new Date().toISOString(),
+        id: s.yieldSourceId,
+        name: s.displayName || s.name,
+        displayName: s.displayName,
+        type: s.type,
+        currentApy: s.currentApy,
+        tvl: s.tvl,
+        lastUpdated: s.lastUpdated?.toISOString() || new Date().toISOString(),
 
         // Icon data from DB
-        dappIcon: p.dappIcon,
-        dappName: p.dappName,
-        tokenIcons: p.tokenIcons || [],
-        tokenSymbols: p.tokenSymbols || [],
+        dappIcon: s.dappIcon,
+        dappName: s.dappName,
+        tokenIcons: s.tokenIcons || [],
+        tokenSymbols: s.tokenSymbols || [],
 
         // Metrics
         apy7dAvg: m.apy7dAvg ?? null,
@@ -70,6 +88,9 @@ export const GET: RequestHandler = async () => {
         change: formattedChange,
         status,
         volatility,
+
+        isComposite: s.isComposite || false,
+        yieldSubSources: s.yieldSubSources || undefined,
       };
     });
 

@@ -1,5 +1,3 @@
-import { YieldSourceType } from '$shared/typings/YieldSource';
-
 export const componentAddress =
   'component_tdx_2_1cz44jlxyv0wtu2cj7vrul0eh8jpcfv3ce6ptsnat5guwrdlhfpyydn';
 
@@ -15,20 +13,20 @@ export enum YieldSource {
 }
 
 export const YIELD_SOURCE_MAPPINGS = {
-  [YieldSourceType.LSU_POOL]: {
+  [YieldSource.CaviarNine]: {
     name: 'CaviarNine',
     dappDefinitionAddress:
       'account_rdx12yrjl8m5a4cn9aap2ez2lmvw6g64zgyqnlj4gvugzstye4gnj6assc', // CaviarNine dApp definition
     fallbackIcon:
       'https://assets.caviarnine.com/icons/caviarnine_logo_light_400.png',
   },
-  [YieldSourceType.DEX_PAIR]: {
+  [YieldSource.Ociswap]: {
     name: 'Ociswap',
     dappDefinitionAddress:
       'account_rdx12x2ecj3kp4mhq9u34xrdh7njzyz0ewcz4szv0jw5jksxxssnjh7z6z' as string, // Ociswap dApp definition
     fallbackIcon: 'https://ociswap.com/icons/oci.png',
   },
-  [YieldSourceType.VALIDATOR]: {
+  [YieldSource.Xrd]: {
     name: 'Radix',
     dappDefinitionAddress: undefined, // Native staking
     fallbackIcon: '/no-image-circle-min.png',

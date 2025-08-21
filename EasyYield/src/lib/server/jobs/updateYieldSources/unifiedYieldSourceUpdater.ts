@@ -1,9 +1,13 @@
-// src/server/jobs/updateYieldSources/unifiedYieldSourceUpdater.ts
 import BigNumber from 'bignumber.js';
 import { HistoricalYieldModel } from '$server/mongo/models/HistoricalYieldDoc';
 import { YieldSourceModel } from '$server/mongo/models/YieldSource';
-import { YieldSourceType } from '$shared/typings/YieldSource';
+import {
+  YieldSourceType,
+  type YieldSourceDocRaw,
+} from '$shared/typings/YieldSource';
 import { batchProcessYieldSources } from './yieldSourceProcessor';
+import type { CaviarNinePoolWithVault } from '$shared/typings/CaviarNine';
+import { YIELD_SOURCE_MAPPINGS, YieldSource } from '$lib/constants';
 
 interface RawYieldSource {
   id: string;
@@ -11,7 +15,7 @@ interface RawYieldSource {
   type: YieldSourceType;
   rawApy: string | number;
   rawTvl: string | number;
-  rawData: any;
+  rawData: YieldSourceDocRaw<CaviarNinePoolWithVault>;
 }
 
 interface UpdateResult {
@@ -22,7 +26,7 @@ interface UpdateResult {
 
 export async function updateYieldSourcesBatch(
   rawYieldSources: RawYieldSource[],
-  sourceName: string
+  sourceName: YieldSource
 ): Promise<UpdateResult> {
   if (rawYieldSources.length === 0) {
     console.log(`[INFO] No ${sourceName} yield sources to process`);
@@ -34,6 +38,7 @@ export async function updateYieldSourcesBatch(
     id: source.id,
     originalName: source.originalName,
     yieldSourceType: source.type,
+    yieldSourceName: sourceName,
   }));
 
   // ✅ STEP 2: Batch process all names and icons
@@ -82,8 +87,8 @@ export async function updateYieldSourcesBatch(
             displayName: processedResult.displayName,
             description: processedResult.description,
             tokenSymbols: processedResult.tokenSymbols,
-            dappIcon: processedResult.dappIcon,
-            dappName: processedResult.dappName,
+            dappIcon: YIELD_SOURCE_MAPPINGS[sourceName].fallbackIcon,
+            dappName: YIELD_SOURCE_MAPPINGS[sourceName].name,
             tokenIcons: processedResult.tokenIcons,
 
             type: source.type,
@@ -91,6 +96,8 @@ export async function updateYieldSourcesBatch(
             tvl: tvl.toString(),
             lastUpdated: now,
             raw: source.rawData,
+            yieldSubSources: source.rawData.yieldSubSources,
+            isComposite: source.rawData.isComposite,
           },
         },
         { upsert: true, new: true }

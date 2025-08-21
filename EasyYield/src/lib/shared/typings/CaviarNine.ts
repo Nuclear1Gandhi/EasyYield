@@ -5,8 +5,8 @@ export interface CaviarNinePool {
   apy?: string;
   apr?: string;
   tvl?: string;
-  token0?: { symbol: string };
-  token1?: { symbol: string };
+  token0?: { symbol: string | null; name: string | null; address: string };
+  token1?: { symbol: string | null; name: string | null; address: string };
 }
 
 export type CaviarNinePoolResponse = {
@@ -88,6 +88,9 @@ export type FeeVault = {
  */
 export interface CaviarNinePoolWithVault extends CaviarNinePool {
   feeVaultData?: FeeVault | null;
+  hasVault: boolean;
+  poolCategory: 'PREMIUM_VAULT' | 'BASIC_DEX';
+  vaultBenefits: string[];
 }
 /**
  * The top-level response structure for fee_vaults:

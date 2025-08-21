@@ -1,10 +1,6 @@
-// src/server/utils/iconProcessor.ts
 import { getDappInfo, batchFetchTokenIcons } from './iconFetcher';
-import type { YieldSourceType } from '$shared/typings/YieldSource';
-import {
-  getDappMapping,
-  getFallbackTokenIcon,
-} from '$shared/utils/dataTransform';
+import { getFallbackTokenIcon } from '$shared/utils/dataTransform';
+import { YIELD_SOURCE_MAPPINGS, YieldSource } from '$lib/constants';
 
 interface IconData {
   dappIcon?: string;
@@ -13,12 +9,12 @@ interface IconData {
 }
 
 export async function processYieldSourceIcons(
-  yieldSourceType: YieldSourceType,
+  yieldSource: YieldSource,
   resourceAddresses: string[],
   tokenSymbols: string[]
 ): Promise<IconData> {
   // Get protocol/dApp info
-  const protocolMapping = getDappMapping(yieldSourceType);
+  const protocolMapping = YIELD_SOURCE_MAPPINGS[yieldSource];
   const dappInfo = await getDappInfo(protocolMapping.dappDefinitionAddress);
 
   // Get token icons from metadata
@@ -46,7 +42,7 @@ export async function processYieldSourceIcons(
 // Batch process icons for multiple yield sources
 export async function batchProcessIcons(
   yieldSources: Array<{
-    yieldSourceType: YieldSourceType;
+    yieldSourceName: YieldSource;
     resourceAddresses: string[];
     tokenSymbols: string[];
   }>
@@ -57,10 +53,10 @@ export async function batchProcessIcons(
   const allResourceAddresses = new Set<string>();
   const dappDefinitions = new Set<string>();
 
-  yieldSources.forEach(({ yieldSourceType, resourceAddresses }) => {
+  yieldSources.forEach(({ yieldSourceName, resourceAddresses }) => {
     resourceAddresses.forEach((addr) => allResourceAddresses.add(addr));
+    const protocolMapping = YIELD_SOURCE_MAPPINGS[yieldSourceName];
 
-    const protocolMapping = getDappMapping(yieldSourceType);
     if (protocolMapping.dappDefinitionAddress) {
       dappDefinitions.add(protocolMapping.dappDefinitionAddress);
     }
@@ -74,10 +70,10 @@ export async function batchProcessIcons(
 
   // Process each yield source (now using cached data)
   for (let i = 0; i < yieldSources.length; i++) {
-    const { yieldSourceType, resourceAddresses, tokenSymbols } =
+    const { yieldSourceName, resourceAddresses, tokenSymbols } =
       yieldSources[i];
     const iconData = await processYieldSourceIcons(
-      yieldSourceType,
+      yieldSourceName,
       resourceAddresses,
       tokenSymbols
     );

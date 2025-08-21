@@ -31,8 +31,9 @@ function getDisplayNameAndDescription(
 ): { displayName: string; description: string } {
   let displayName = cleanName;
   let description = '';
-
   switch (yieldSourceType) {
+    case YieldSourceType.SHAPE_LIQUIDITY:
+    case YieldSourceType.INSTANT_UNSTAKE:
     case YieldSourceType.LSU_POOL:
       displayName = cleanName.replace(/caviarnine/gi, '').trim() || 'LSU Pool';
       description = 'Liquid Staking';
@@ -44,7 +45,8 @@ function getDisplayNameAndDescription(
       break;
 
     case YieldSourceType.DEX_PAIR:
-      displayName = cleanName.replace(/ociswap/gi, '').trim() || 'DEX Pool';
+      displayName =
+        cleanName.replace(/ociswap|caviarnine/gi, '').trim() || 'DEX Pool';
       description = 'DEX Liquidity Pool';
       break;
 
@@ -78,7 +80,6 @@ function replaceResourceAddresses(
       generateFallbackName(address);
     cleanName = cleanName.replace(address, displayName);
   });
-
   return cleanName;
 }
 
@@ -102,7 +103,6 @@ function processYieldSourceNameCore(
 
   // Apply common name cleaning
   cleanName = applyNameCleaning(cleanName);
-
   // Get type-specific display name and description
   return getDisplayNameAndDescription(cleanName, yieldSourceType);
 }
@@ -123,7 +123,6 @@ export async function batchFetchResourceNames(
   const uncachedAddresses = resourceAddresses.filter(
     (addr) => !cachedResults.has(addr)
   );
-
   if (uncachedAddresses.length === 0) {
     return results;
   }
@@ -207,7 +206,6 @@ export function cleanYieldSourceNameWithCache(
 
   // Use cache-only (no API calls, assumes pre-fetched)
   const resourceNames = getCachedResourceNames(resourceAddresses);
-
   // Process using core logic
   return processYieldSourceNameCore(
     originalName,

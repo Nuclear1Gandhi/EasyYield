@@ -1,9 +1,3 @@
-import { YIELD_SOURCE_MAPPINGS } from '$lib/constants';
-import type {
-  YieldSourceDisplayData,
-  YieldSourceResponse,
-} from '$shared/typings/Api';
-import type { YieldSourceType } from '$shared/typings/YieldSource';
 import BigNumber from 'bignumber.js';
 
 export function formatNumber(value: string | number, decimals = 2): string {
@@ -77,23 +71,6 @@ export function getYieldSource(type: string): string {
   }
 }
 
-export function transformYieldSourceData(
-  yieldSource: YieldSourceResponse
-): YieldSourceDisplayData {
-  return {
-    id: yieldSource.yieldSourceId,
-    name: yieldSource.name,
-    apy: formatApy(yieldSource.currentApy),
-    tvl: formatNumber(yieldSource.tvl),
-    change: calculateChange(yieldSource.currentApy, yieldSource.apy7dAvg),
-    status: determineStatus(yieldSource.apyStd7d, yieldSource.tvlChange7d),
-    icon: getYieldSource(yieldSource.type),
-    volatility: yieldSource.apyStd7d
-      ? parseFloat(yieldSource.apyStd7d)
-      : undefined,
-  };
-}
-
 export function generateFallbackName(resourceAddress: string): string {
   const prefix = 'resource_';
   if (resourceAddress.startsWith(prefix)) {
@@ -113,16 +90,6 @@ export function extractResourceAddresses(text: string): string[] {
   return resourceMatches;
 }
 
-export function getDappMapping(yieldSourceType: YieldSourceType) {
-  return (
-    YIELD_SOURCE_MAPPINGS[yieldSourceType] || {
-      name: 'Unknown',
-      dappDefinitionAddress: null,
-      fallbackIcon: '/icons/protocols/default.svg',
-    }
-  );
-}
-
 // Fallback for when metadata isn't available
 export function getFallbackTokenIcon(symbol: string): string {
   const fallbacks: Record<string, string> = {
@@ -132,5 +99,5 @@ export function getFallbackTokenIcon(symbol: string): string {
     LSULP: '/icons/tokens/lsulp.svg',
   };
 
-  return fallbacks[symbol.toUpperCase()] || '/icons/tokens/generic.svg';
+  return fallbacks[symbol.toUpperCase()] || '/no-image-circle-min.png';
 }

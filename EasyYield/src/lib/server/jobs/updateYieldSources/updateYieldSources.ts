@@ -1,4 +1,3 @@
-// src/server/jobs/updateYieldSources/updateYieldSources.ts
 import { computeAndUpsertMetrics } from '$server/yieldSourceMetrics/computeAndUpsertMetrics';
 import { updateOciswapYieldSources } from './ociswap';
 import { updateCaviarNineYieldSources } from './caviarNine';

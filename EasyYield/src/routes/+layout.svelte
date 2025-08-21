@@ -10,7 +10,6 @@
 
 <div class="app-shell">
   <Header ></Header>
-
   <!-- Main content + right panel -->
   <main class="app-main">
     <section class="content">

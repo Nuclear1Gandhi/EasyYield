@@ -1,4 +1,4 @@
-// src/server/utils/yieldSourceProcessor.ts
+import type { YieldSource } from '$lib/constants';
 import { batchProcessIcons } from '$server/utils/iconProcessor';
 import {
   batchFetchResourceNames,
@@ -22,6 +22,7 @@ export async function batchProcessYieldSources(
     id: string;
     originalName: string;
     yieldSourceType: YieldSourceType;
+    yieldSourceName: YieldSource;
   }>
 ): Promise<Map<string, YieldSourceProcessingResult>> {
   // Step 1: Pre-fetch resource names
@@ -51,11 +52,14 @@ export async function batchProcessYieldSources(
   });
 
   // Step 3: Process icons
-  const iconProcessingData = yieldSources.map(({ yieldSourceType }, index) => ({
-    yieldSourceType,
-    resourceAddresses: resourceMap.get(yieldSources[index].id) || [],
-    tokenSymbols: nameResults.get(yieldSources[index].id)?.tokenSymbols || [],
-  }));
+  const iconProcessingData = yieldSources.map(
+    ({ yieldSourceType, yieldSourceName }, index) => ({
+      yieldSourceName,
+      yieldSourceType,
+      resourceAddresses: resourceMap.get(yieldSources[index].id) || [],
+      tokenSymbols: nameResults.get(yieldSources[index].id)?.tokenSymbols || [],
+    })
+  );
 
   const iconResults = await batchProcessIcons(iconProcessingData);
   // Step 4: Combine results

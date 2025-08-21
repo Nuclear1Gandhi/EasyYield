@@ -6,6 +6,7 @@
   let { data }: { data: PageServerData } = $props()
   // Load initial data
   dashboardStore.hydrate(data);
+
   onMount(() => {
     // Set up periodic refresh (every 5 minutes)
     const interval = setInterval(() => {

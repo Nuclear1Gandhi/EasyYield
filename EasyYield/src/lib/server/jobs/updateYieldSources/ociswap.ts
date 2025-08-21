@@ -4,7 +4,7 @@ import { HistoricalYieldModel } from '$server/mongo/models/HistoricalYieldDoc';
 import { YieldSourceModel } from '$server/mongo/models/YieldSource';
 import { YieldSourceType } from '$shared/typings/YieldSource';
 import { cleanYieldSourceNameWithCache } from '$server/utils/yieldSourceNameCleaner';
-import { getDappMapping } from '$shared/utils/dataTransform';
+import { YIELD_SOURCE_MAPPINGS, YieldSource } from '$lib/constants';
 
 export async function updateOciswapYieldSources(): Promise<{
   updates: number;
@@ -64,7 +64,7 @@ export async function updateOciswapYieldSources(): Promise<{
       );
 
       // Get protocol info
-      const protocolMapping = getDappMapping(YieldSourceType.DEX_PAIR);
+      const protocolMapping = YIELD_SOURCE_MAPPINGS[YieldSource.Ociswap];
 
       await YieldSourceModel.findOneAndUpdate(
         { yieldSourceId: pool.address },

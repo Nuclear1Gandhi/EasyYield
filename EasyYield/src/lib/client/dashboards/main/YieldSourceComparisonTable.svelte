@@ -2,8 +2,9 @@
   import PaginatedTable from '$client/components/PaginatedTable/PaginatedTable.svelte';
   import { formatLargeNumber } from '$client/utils/format';
   import type { YieldSourceDisplayData } from '$shared/typings/Api';
-  import YieldSourceCell from './YieldSourceCell.svelte';
   import StartEarningButton from '$client/components/StartEarningButton/StartEarningButton.svelte';
+  import YieldSource from '../yieldSource/YieldSource.svelte';
+  import YieldSourceCell from './YieldSourceCell.svelte';
   
   let { yieldSources }: { yieldSources: YieldSourceDisplayData[] } = $props();
 

@@ -1,4 +1,4 @@
-import ky, { type KyResponse } from 'ky';
+import ky from 'ky';
 import { OCISWAP_API_URL } from './constants';
 import type { OciswapPool } from '$shared/typings/Ociswap';
 

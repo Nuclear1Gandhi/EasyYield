@@ -1,3 +1,5 @@
+import type { YieldSourceType, YieldSubSource } from './YieldSource';
+
 export interface YieldSourceResponse {
   yieldSourceId: string;
   name: string;
@@ -14,7 +16,7 @@ export interface YieldSourceDisplayData {
   id: string;
   name: string;
   displayName?: string;
-  type: string;
+  type: YieldSourceType;
   currentApy: string;
   tvl: string;
   lastUpdated: string;
@@ -35,6 +37,12 @@ export interface YieldSourceDisplayData {
   change: string; // formatted tvlChange7d
   status: 'growing' | 'stable' | 'volatile';
   volatility?: number;
+
+  isComposite?: boolean;
+  yieldSubSources?: YieldSubSource[];
+  hasVault: boolean;
+  vaultCategory: 'BASIC_DEX' | 'PREMIUM_VAULT';
+  riskProfile?: 'low' | 'medium' | 'high' | 'mixed'; // Aggregate risk
 }
 
 // Portfolio data (you might have this from wallet integration)

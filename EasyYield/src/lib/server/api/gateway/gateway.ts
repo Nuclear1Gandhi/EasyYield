@@ -1,35 +1,53 @@
-import type { YieldSourceDoc } from '$shared/typings/YieldSource';
-import {
-  GatewayApiClient,
-  RadixNetwork,
-} from '@radixdlt/babylon-gateway-api-sdk';
+import { resourceCache } from '$server/cache/resourceCache';
+import { RadixGatewayClient } from '$server/services/gatewayClient';
 
-// 1. Initialize gateway client for backend (Stokenet or Mainnet)
-export const gatewayApi = GatewayApiClient.initialize({
-  networkId: RadixNetwork.Mainnet,
-  applicationName: 'EasyYield',
-  applicationVersion: '1.0.0',
-});
+export async function resolveTokenNames(
+  address: string
+): Promise<{ name: string; symbol: string }> {
+  const gateway = RadixGatewayClient.getInstance();
+  let nameAndSymbol = { name: 'unknown', symbol: '--' };
 
-// 2. Fetch yield sources details (by component address)
-export async function fetchYieldSourceDetails(componentAddress: string) {
-  try {
-    const result = await gatewayApi.state.getEntityMetadata(componentAddress);
-    return result;
-  } catch (err) {
-    console.error('Error fetching yield source details', err);
-    throw err;
-  }
-}
+  await resourceCache.resolve(address, async () => {
+    console.log(`🔍 Fetching token details for: ${address.slice(0, 20)}...`);
+    // Correct method signature: single address as string, not array
+    const response = await gateway.state.getEntityDetailsVaultAggregated(
+      [address],
+      {
+        explicitMetadata: ['symbol', 'name'], // Request symbol and name metadata
+        nonFungibleIncludeNfids: false,
+        nativeResourceDetails: true,
+      }
+    );
+    // The response is a single item, not an array
+    const metadata = response[0].explicit_metadata?.items || [];
+    const symbolItem = metadata.find((item) => item.key === 'symbol');
+    const nameItem = metadata.find((item) => item.key === 'name');
 
-async function fetchValidatorStakes(): Promise<YieldSourceDoc[]> {
-  const validators = await gatewayApi.state.getValidators();
+    if (
+      symbolItem?.value.programmatic_json.kind !== 'Enum' ||
+      nameItem?.value.programmatic_json.kind !== 'Enum'
+    ) {
+      throw new Error(`Wrong kind of symbol item ${address}`);
+    }
 
-  return validators.items.map((v) => ({
-    yieldSourceId: `validator-${v.address}`,
-    type: 'VALIDATOR',
-    currentApy: v.apy * 100, // convert to percent
-    tvl: v.totalStake / 1e18, // convert from base units
-    lastUpdated: new Date(),
-  }));
+    const symbol = symbolItem?.value?.programmatic_json.fields[0];
+    const name = nameItem?.value?.programmatic_json.fields[0];
+    if (!symbol || !name) {
+      throw new Error(`No symbol found for ${address}`);
+    }
+
+    if (symbol.kind !== 'String' || name.kind !== 'String') {
+      throw new Error(`Incorrect symbol kind ${address}`);
+    }
+
+    console.log(
+      `✅ Resolved ${address.slice(0, 20)}... → ${symbol.value} | ${name.value}`
+    );
+    nameAndSymbol.name = name.value;
+    nameAndSymbol.symbol = symbol.value;
+
+    return symbol.value;
+  });
+
+  return nameAndSymbol;
 }

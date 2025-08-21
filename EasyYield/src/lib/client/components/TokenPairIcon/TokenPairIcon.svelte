@@ -26,6 +26,7 @@
           src={iconUrl} 
           alt={tokenSymbols[index] || 'Token'} 
           onerror={function() {
+            console.error('Error loading image', iconUrl)
             this.src = '/no-image-circle-min.png'
           }}
         />

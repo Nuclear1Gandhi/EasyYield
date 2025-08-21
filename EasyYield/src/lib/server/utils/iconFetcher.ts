@@ -1,4 +1,3 @@
-// src/server/utils/iconFetcher.ts
 import { RadixGatewayClient } from '$server/services/gatewayClient';
 
 interface DappInfo {
