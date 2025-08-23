@@ -1,76 +1,73 @@
 <script lang="ts">
   import Icon  from '@iconify/svelte';
-  import {  Input } from 'flowbite-svelte';
-  import '$client/styles/app.scss'
   import { onMount } from 'svelte';
   import { useRadixAuth } from '$client/hooks/useRadixAuth';
-  import { type NavKey } from '../Sidebar/Sidebar.svelte';
   import type { YieldSourceDisplayData } from '$shared/typings/Api';
   import MainSearch from './MainSearch.svelte';
-  import { goto } from '$app/navigation';
   import { Protocols } from '$shared/typings/YieldSource';
+  import Filters, { type FilterOptions } from './Filters.svelte';
 
-  type Props =  {  }
-  let {  }: Props = $props()
-  
-  // Runes state
-
-  // Iconify (Tabler set)
-  const iMenu = 'tabler:menu-2';
-  const iClose = 'tabler:x';
-  const iSearch = 'tabler:search';
+  type Props =  {};
+  let {}: Props = $props();
 
   onMount(() => {
     useRadixAuth();
-  })
+  });
 
   let sidebarOpen = $state(false);
-  let activeNav = $state<NavKey>('dashboard');
+
+  // Filter state for FilterBar
+  let filters = $state<FilterOptions>({
+    yieldSourceType: [],
+    protocols: [],
+    apyRange: [0, 50],
+    tvlRange: [0, 10000000],
+    riskLevels: [],
+    hasIncentives: null,
+    instantLiquidity: null,
+    principalProtection: null
+  });
+
+  function handleFilterChange(o: FilterOptions) {
+    filters = o;
+    // TODO: React to filter changes (e.g., refresh data)
+    console.log('Filters updated:', filters);
+  }
+
   function handleSearchSelect(result: YieldSourceDisplayData) {
     let externalUrl: string | null = null;
     
-    // Determine the external URL based on the dapp
     switch (result.protocolMetadata?.protocol) {
       case Protocols.CAVIARNINE:
-        // CaviarNine pool URL format
         externalUrl = `https://app.caviarnine.com/pool/${result.id}`;
         break;
         
       case Protocols.OCISWAP:
-        // Ociswap pool URL format
         externalUrl = `https://ociswap.com/pools/${result.id}`;
         break;
         
       default:
-        // Fallback: try to construct a generic pool URL
         if (result.id.startsWith('component_rdx1')) {
-          // This looks like a Radix component address
           externalUrl = `https://radixscan.io/account/${result.id}`;
         }
         break;
     }
     
     if (externalUrl) {
-      // Open in new tab
       window.open(externalUrl, '_blank', 'noopener,noreferrer');
     } else {
       console.warn(`No external URL mapping found for ${result.protocolName} pool: ${result.id}`);
-      
-      // Fallback: show a toast notification or modal with pool details
-      // toast.info(`Selected ${result.displayName || result.name} (${result.apy}% APY)`);
     }
   }
-
 </script>
 
 <header class="app-header">
   <div class="brand">
-
     <button class="icon-btn" aria-label="Menu" onclick={() => (sidebarOpen = !sidebarOpen)}>
       {#if sidebarOpen}
-        <Icon icon={iClose} width="20" height="20" />
+        <Icon icon="tabler:x" width="20" height="20" />
       {:else}
-        <Icon icon={iMenu} width="20" height="20" />
+        <Icon icon="tabler:menu-2" width="20" height="20" />
       {/if}
     </button>
     <img src="/logo.png" alt="logo" class="logo" aria-hidden="true" />
@@ -78,42 +75,33 @@
   </div>
 
   <div class="top-actions">
-    <div class="search">
-      <MainSearch
-        placeholder="Search yield sources..." 
-        onSelect={handleSearchSelect}
-      />
+    <div class="centered-search-filters">
+      <div class="main-search">
+        <MainSearch
+          placeholder="Search yield sources..." 
+          onSelect={handleSearchSelect}
+        />
+      </div>
+      <div class="filter-bar">
+        <Filters 
+          {filters} 
+          onFiltersChange={(f) => {
+            handleFilterChange(f)
+          }} 
+        />
+      </div>
     </div>
-    
+  
     <div class="right-actions">
       <radix-connect-button></radix-connect-button>
     </div>
   </div>
 </header>
-<!-- Mobile Drawer sidebar -->
-<!-- <Drawer   class="custom-drawer" open={sidebarOpen} onclose={() => (sidebarOpen = false)} >
-  <Sidebar active={activeNav} mode='drawer' onNavSelect={handleNavSelect} />
-</Drawer>
-
-<Sidebar active={activeNav} onNavSelect={handleNavSelect} /> -->
-
-
 
 <style lang="scss">
   @use '$client/styles/variables' as *;
   @use '$client/styles/mixins' as *;
-  :global(.custom-drawer) {
-    background: var(--surface-1) !important;
-    border: none !important;
-    box-shadow: var(--shadow-2) !important;
-    padding: 0 !important;
-  }
 
-  :global(.custom-drawer > div) {
-    padding: 0 !important;
-    background: transparent !important;
-  }
-  /* Adjust this path alias to your project structure */
   .app-header {
     grid-area: header;
     position: sticky;
@@ -121,12 +109,23 @@
     z-index: 40;
     background: var(--surface-1);
     border-bottom: 1px solid var(--border-weak);
+    display: flex;
     align-items: center;
     justify-content: space-between;
-    display: flex;
-    gap: 12px;
     padding: 10px 14px;
+    gap: 12px;
   }
+    .centered-search-filters {
+      display: flex;
+      align-items: center;
+      flex-direction: row;
+      gap: 16px;
+      /* Center horizontally inside flex container */
+      margin-left: auto;
+      margin-right: auto;
+      max-width: 680px;
+      flex-shrink: 1;
+    }
 
   .brand {
     display: flex;
@@ -142,10 +141,7 @@
       border: 1px solid transparent;
       background: transparent;
       color: var(--gray-300);
-      transition:
-        background var(--dur-med) var(--easing-standard),
-        border-color var(--dur-med) var(--easing-standard),
-        color var(--dur-med) var(--easing-standard);
+      transition: background var(--dur-med) var(--easing-standard), border-color var(--dur-med) var(--easing-standard), color var(--dur-med) var(--easing-standard);
 
       &:hover {
         background: var(--surface-2);
@@ -153,21 +149,18 @@
         color: var(--gray-100);
       }
 
-      // Show hamburger only on mobile/tablet
-      display: grid;
       @include respond-to(lg) {
         display: none;
       }
     }
+
+
 
     .logo {
       width: 28px;
       height: 28px;
       border-radius: 6px;
       box-shadow: 0 1px 0 rgba(255,255,255,0.06) inset;
-      position: relative;
-
-   
     }
 
     .name {
@@ -176,7 +169,6 @@
       color: var(--fg);
       font-size: 1.1rem;
 
-      // Hide name on very small screens if needed
       @media (max-width: 480px) {
         display: none;
       }
@@ -184,19 +176,27 @@
   }
 
   .top-actions {
+    flex: 1;
     display: flex;
     align-items: center;
-    gap: 10px;
-    flex: 1;
+    gap: 12px;
     justify-content: center;
 
-    .search {
-      width: 100%;
-      max-width: 520px;
+    .main-search {
+      flex-grow: 1;
+      width: 620px;
 
-      // On mobile, reduce max-width
       @media (max-width: 768px) {
         max-width: 280px;
+      }
+    }
+
+    .filter-bar {
+      min-width: 240px;
+      max-width: 360px;
+
+      @media (max-width: 768px) {
+        display: none; /* Optionally hide or move filter bar on mobile */
       }
     }
   }
@@ -207,7 +207,6 @@
     gap: 12px;
     justify-content: flex-end;
 
-    // Stack on very small screens
     @media (max-width: 480px) {
       gap: 8px;
     }

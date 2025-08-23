@@ -3,7 +3,7 @@
   import { Button } from 'flowbite-svelte';
   import { goto } from '$app/navigation';
   import { browser } from '$app/environment';
-  import { untrack } from 'svelte';
+  import { untrack, type Snippet } from 'svelte';
   import { page } from '$app/state';
   type Column = {
       key: keyof RowItem;
@@ -20,7 +20,7 @@
     itemName?: string;
     rowClass: (item: RowItem, index: number) => string,
     syncWithUrl?: boolean; // New prop to enable URL sync
-
+    empty?: Snippet
     expandable?: boolean;
     expandedRowRender?: (item: RowItem) => { component: any, props: any };
     defaultExpandedRows?: Set<string>;
@@ -39,6 +39,7 @@
     expandedRowRender,
     defaultExpandedRows,
     getRowId,
+    empty
   }: Props = $props();
 
   // Get URL params
@@ -242,51 +243,66 @@
           
         </tr>
       </thead>
-      <tbody>
-        {#each displayedData as item, index (index)}
-          <tr class={rowClass ? rowClass(item, index) : ''}>
-            {#each columns as column}
-              <td>
-                 {#if column.render}
-                  {@const rendered = getRenderedContent(item, column)}
-                  {#if typeof rendered === 'string'}
-                    {@html rendered}
-                  {:else}
-                    {@const { component: Component, props } = rendered}
-                    <Component {...props} />
-                  {/if}
-                {:else}
-                  {item[column.key]}
-                {/if}
-              </td>
-            {/each}
-
-            {#if expandable}
-              <td class="expand-cell">
-                <button 
-                  class="expand-button"
-                  onclick={() => toggleRowExpansion(item)}
-                  aria-label={isRowExpanded(item) ? 'Collapse row' : 'Expand row'}
-                >
-                  <Icon 
-                    icon={isRowExpanded(item) ? 'tabler:chevron-up' : 'tabler:chevron-down'} 
-                    width="16" 
-                  />
-                </button>
-              </td>
-            {/if}
-          </tr>
-
-          {#if expandable && isRowExpanded(item) && expandedRowRender}
-            {@const { component: Component, props } = expandedRowRender(item)}
-            <tr class="expanded-row">
-              <td colspan={expandable ? columns.length + 1 : columns.length} class="expanded-cell">
+<tbody>
+  {#if displayedData.length === 0}
+    <tr>
+      <td colspan={expandable ? columns.length + 1 : columns.length} class="empty-state-cell">
+        {#if empty}
+          {@render empty()}
+        {:else}
+          <div class="default-empty-state">
+            <Icon icon="tabler:database-off" width="48" />
+            <p>No {itemName} found</p>
+          </div>
+        {/if}
+      </td>
+    </tr>
+  {:else}
+    {#each displayedData as item, index (index)}
+      <tr class={rowClass ? rowClass(item, index) : ''}>
+        {#each columns as column}
+          <td>
+             {#if column.render}
+              {@const rendered = getRenderedContent(item, column)}
+              {#if typeof rendered === 'string'}
+                {@html rendered}
+              {:else}
+                {@const { component: Component, props } = rendered}
                 <Component {...props} />
-              </td>
-            </tr>
-          {/if}
+              {/if}
+            {:else}
+              {item[column.key]}
+            {/if}
+          </td>
         {/each}
-      </tbody>
+
+        {#if expandable}
+          <td class="expand-cell">
+            <button 
+              class="expand-button"
+              onclick={() => toggleRowExpansion(item)}
+              aria-label={isRowExpanded(item) ? 'Collapse row' : 'Expand row'}
+            >
+              <Icon 
+                icon={isRowExpanded(item) ? 'tabler:chevron-up' : 'tabler:chevron-down'} 
+                width="16" 
+              />
+            </button>
+          </td>
+        {/if}
+      </tr>
+
+      {#if expandable && isRowExpanded(item) && expandedRowRender}
+        {@const { component: Component, props } = expandedRowRender(item)}
+        <tr class="expanded-row">
+          <td colspan={expandable ? columns.length + 1 : columns.length} class="expanded-cell">
+            <Component {...props} />
+          </td>
+        </tr>
+      {/if}
+    {/each}
+  {/if}
+</tbody>
     </table>
   </div>
 
@@ -352,6 +368,13 @@
 </div>
 
 <style lang="scss">
+  
+.empty-state-cell {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--gray-400);
+  font-style: italic;
+}  
 .paginated-table-container {
   background: var(--surface-1);
   border-radius: var(--radius);
@@ -512,6 +535,24 @@
 .expanded-cell {
   padding: 0 !important;
   border-top: 1px solid var(--border-weak);
+}
+
+.empty-state-cell {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--gray-400);
+  
+  .default-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    
+    p {
+      margin: 0;
+      font-size: 14px;
+    }
+  }
 }
 </style>
 

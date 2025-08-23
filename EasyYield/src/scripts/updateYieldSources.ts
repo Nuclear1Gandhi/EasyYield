@@ -11,7 +11,9 @@ async function main() {
 
   try {
     console.log('Connecting to MongoDB…');
-    await mongoose.connect(uri);
+    await mongoose.connect(uri, {
+        dbName: process.env.MONGODB_DB_NAME || undefined, 
+    });
     console.log('Running updateYieldSourcesJob…');
     const result = await updateYieldSourcesJob();
     console.log(
