@@ -21,12 +21,9 @@
   });
   
   let isComposite = $derived(row.isComposite || false);
-  let isHighRisk = $derived(row.riskProfile === 'high' || row.riskProfile === 'mixed');
-  let isLowRisk = $derived(row.riskProfile === 'low');
   
   // Only show badges for notable characteristics
   let shouldShowSpecialBadge = $derived(specialFeatures().length > 0);
-  let shouldShowRiskBadge = $derived(isHighRisk || isLowRisk);
   
   // Primary special feature for main badge
   let primaryFeature = $derived(specialFeatures()[0] || null);
@@ -63,9 +60,7 @@
           {/if}
         </div>
       {/if}
-      
-     
-      
+
       <DappBadge
         dappIcon={row.protocolIcon} 
         dappName={row.protocolName}
@@ -81,23 +76,14 @@
         {:else if row.status === 'volatile'}
           <span class="status-indicator volatile">📊 Volatile</span>
         {/if}
-         <!-- Risk badge only for notable risk levels -->
-      {#if shouldShowRiskBadge}
-        <div class="risk-badge" class:high-risk={isHighRisk} class:low-risk={isLowRisk}>
-          {isHighRisk ? '⚠️' : '🛡️'}
-          <span class="risk-label">
-            {isHighRisk ? 'High Risk' : 'Low Risk'}
-          </span>
-        </div>
-      {/if}
-      
-      <!-- Composite indicator -->
-      {#if isComposite}
-        <div class="composite-badge">
-          <span class="composite-icon">⚡</span>
-          <span class="composite-label">Multi-Source</span>
-        </div>
-      {/if}
+        
+        <!-- Composite indicator -->
+        {#if isComposite}
+          <div class="composite-badge">
+            <span class="composite-icon">⚡</span>
+            <span class="composite-label">Multi-Source</span>
+          </div>
+        {/if}
       </div>
       
       <!-- Feature benefits - only show if there are special features -->
@@ -207,33 +193,6 @@
   }
 }
 
-.risk-badge {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  padding: 1px 5px;
-  border-radius: 8px;
-  font-size: 9px;
-  font-weight: 500;
-  flex-shrink: 0;
-
-  &.high-risk {
-    background: var(--red-100);
-    color: var(--red-700);
-    border: 1px solid var(--red-200);
-  }
-
-  &.low-risk {
-    background: var(--green-100);
-    color: var(--green-700);
-    border: 1px solid var(--green-200);
-  }
-
-  .risk-label {
-    font-size: 8px;
-  }
-}
-
 .composite-badge {
   display: flex;
   align-items: center;
@@ -315,12 +274,10 @@
   }
   
   .feature-badge,
-  .risk-badge,
   .composite-badge {
     padding: 1px 4px;
     
     .feature-label,
-    .risk-label,
     .composite-label {
       font-size: 8px;
     }

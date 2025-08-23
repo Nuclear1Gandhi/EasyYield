@@ -13,7 +13,7 @@
       type: 'primary'
     },
     {
-      label: '7-Day Avg APY',
+      label: '7-Day Avg APY ',
       value: yieldSource.apy7dAvg ? `${yieldSource.apy7dAvg}%` : '--',
       type: 'normal'
     },
