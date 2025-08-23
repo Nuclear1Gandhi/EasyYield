@@ -5,6 +5,7 @@
   import StartEarningButton from '$client/components/StartEarningButton/StartEarningButton.svelte';
   import YieldSourceCell from './YieldSourceCell.svelte';
   import YieldSourceExpanded from './YieldSourceTableRow/Expanded/YieldSourceExpanded.svelte';
+  import Empty from './Empty.svelte';
   
   let { yieldSources }: { yieldSources: YieldSourceDisplayData[] } = $props();
 
@@ -77,6 +78,40 @@
     // return item.isComposite ? 'composite-row' : '';
     return ''
   }
+// State for refresh loading
+  let isRefreshing = $state(false);
+  let refreshError = $state<string | null>(null);
+
+  async function refreshYieldData() {
+    isRefreshing = true;
+    refreshError = null;
+    
+    try {
+      const response = await fetch('/api/v1/protected/yield-sources', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        cache: 'no-cache'
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch yield sources: ${response.status} ${response.statusText}`);
+      }
+
+      const freshData: YieldSourceDisplayData[] = await response.json();
+      yieldSources = freshData;
+      
+      console.log(`Refreshed ${freshData.length} yield sources`);
+      
+    } catch (error) {
+      console.error('Failed to refresh yield data:', error);
+      refreshError = error instanceof Error ? error.message : 'Unknown error occurred';
+    } finally {
+      isRefreshing = false;
+    }
+  }
+
 </script>
 
 <PaginatedTable
@@ -90,7 +125,26 @@
   expandedRowRender={renderExpandedRow}
   getRowId={getYieldSourceId}
   rowClass={getRowClass}
-/>
+>
+  {#snippet empty()}  
+    <Empty 
+      title="No Yield Opportunities Found"
+      description=""
+      actionText={isRefreshing ? "Refreshing..." : "Refresh Yields"}
+      onAction={refreshYieldData}
+      icon="tabler:coin-off"
+      loading={isRefreshing}
+    />  
+  {/snippet}
+</PaginatedTable>
+
+
+{#if refreshError}
+  <div class="refresh-error">
+    <p>Failed to refresh data: {refreshError}</p>
+    <button onclick={() => refreshError = null}>Dismiss</button>
+  </div>
+{/if}
 
 <style lang="scss">
   :global(.pos) { color: var(--success); }

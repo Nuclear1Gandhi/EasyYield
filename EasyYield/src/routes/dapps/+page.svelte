@@ -1,4 +1,3 @@
-<!-- src/routes/dev/dapps/+page.svelte -->
 <script lang="ts">
   import { goto } from '$app/navigation';
   import { page } from '$app/state';

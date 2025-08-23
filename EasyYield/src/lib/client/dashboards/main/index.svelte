@@ -1,7 +1,6 @@
 <script lang="ts">
   import { Alert, Spinner } from 'flowbite-svelte';
   import { dashboardStore } from '$client/stores/dashboard';
-  import { formatNumber } from '$shared/utils/dataTransform';
   import HeroStats from './HeroStats.svelte';
   import StrategyRecommendations from './StrategyRecommendations.svelte';
   import ActivityFeed from './ActivityFeed.svelte';
@@ -11,75 +10,64 @@
   let dashboardData = $derived($dashboardStore);
   dashboardStore.subscribe(value => dashboardData = value);
 
-  // ✅ Computed hero stats from YieldSourceDisplayData
+  // Computed hero stats for top yield opportunities & movement summary
+
   let heroStats = $derived([
     { 
-      icon: 'tabler:wallet', 
-      label: 'Your Daily Yield Estimate', 
-      value: getUserDailyYield(), // "~2.3 XRD/day" based on holdings
-      isPrimary: true 
+      icon: 'tabler:trophy', 
+      label: 'Top Opportunity', 
+      value: getBestYieldWithApy() // e.g. "Ociswap XRD/USDT (12.4%)"
+    },
+    { 
+      icon: 'tabler:alert-triangle', 
+      label: 'Yield Changes Today', 
+      value: getYieldMovementSummary() // e.g. "3 up, 1 down"
     },
     { 
       icon: 'tabler-trending-up', 
       label: 'Market Benchmark', 
       value: getAverageApy() + '% avg'
     },
-    { 
-      icon: 'tabler:trophy', 
-      label: 'Top Opportunity', 
-      value: getBestYieldWithApy() // "Ociswap XRD/USDT (12.4%)"
-    },
-    { 
-      icon: 'tabler:alert-triangle', 
-      label: 'Yield Changes Today', 
-      value: getYieldMovementSummary() // "3 up, 1 down" or "+0.2% avg"
-    }
   ]);
 
-  
+  // Get average APY across all yield sources, fallback to 0.00
   function getAverageApy(): string {
     if (dashboardData.yieldSources.length === 0) return '0.00';
-    
     const total = dashboardData.yieldSources.reduce((sum, yieldSource) => {
-      return sum + parseFloat(yieldSource.apy || '0');
+      return sum + parseFloat(yieldSource.currentApy || '0');
     }, 0);
-    
     return (total / dashboardData.yieldSources.length).toFixed(2);
   }
 
-  function getUserDailyYield(): string {
-    if (!dashboardData.portfolio?.totalValue) return 'Connect Wallet';
-    
-    const avgApy = parseFloat(getAverageApy());
-    const dailyYield = (parseFloat(dashboardData.portfolio.totalValue) * avgApy / 100) / 365;
-    return `~${formatNumber(dailyYield)} XRD/day`;
-  }
-
+  // Get best yield source with highest APY
   function getBestYieldWithApy(): string {
     if (dashboardData.yieldSources.length === 0) return '--';
-    
     const best = dashboardData.yieldSources.reduce((prev, current) => {
-      return parseFloat(current.apy) > parseFloat(prev.apy) ? current : prev;
+      return parseFloat(current.currentApy) > parseFloat(prev.currentApy) ? current : prev;
     });
-    
-    return `${best.name.slice(0, 15)} (${parseFloat(best.apy).toFixed(1)}%)`;
+    return `${best.name.slice(0, 15)} (${parseFloat(best.currentApy).toFixed(1)}%)`;
   }
 
+  // Summarize yield movement with simple up/down counts
   function getYieldMovementSummary(): string {
-    // This would require 24h historical data - for now mock it
-    const movements = dashboardData.yieldSources.map(source => {
-      // Mock: random movement for demonstration
-      const change = (Math.random() - 0.5) * 2; // -1% to +1%
-      return change;
+    // Use 7d avg vs current to estimate movement if available, fallback to mock
+    if (dashboardData.yieldSources.length === 0) return 'No changes';
+
+    let upCount = 0;
+    let downCount = 0;
+
+    dashboardData.yieldSources.forEach(source => {
+      const current = parseFloat(source.currentApy);
+      const avg7d = source.metrics?.apy7dAvg ? parseFloat(source.metrics.apy7dAvg) : current;
+      if (current > avg7d) upCount++;
+      else if (current < avg7d) downCount++;
     });
-    
-    const upCount = movements.filter(m => m > 0).length;
-    const downCount = movements.filter(m => m < 0).length;
-    
+
     if (upCount === 0 && downCount === 0) return 'No changes';
     return `${upCount} up, ${downCount} down`;
   }
-  // Mock strategies (you can add this to your backend later)
+
+  // Mock strategies (purely UI - no portfolio integration)
   let strategies = [
     {
       type: 'Conservative',
@@ -104,7 +92,7 @@
     }
   ];
 
-  // Mock activity (you can add this to your backend later)
+  // Mock recent activity feed
   let recentActivity = [
     { yieldSource: 'CaviarNine', action: 'APY updated', value: 'New rate', time: '2 hours ago' },
     { yieldSource: 'Ociswap', action: 'Pool data refreshed', value: 'Latest TVL', time: '5 hours ago' },
@@ -113,12 +101,12 @@
 
   function handleViewDetails(yieldSource: any) {
     console.log('Navigate to:', yieldSource.name);
-    // TODO: Navigate to yield source details page
+    // TODO: Implement navigation to yield source details page
   }
 
   function handleApplyStrategy(strategy: any) {
     console.log('Apply strategy:', strategy.type);
-    // TODO: Implement strategy application
+    // TODO: Implement strategy application logic
   }
 
   function handleRefresh() {
@@ -129,7 +117,7 @@
 <div class="dashboard">
   <!-- Error states -->
   {#if Object.values(dashboardData.errors).some(error => error !== null)}
-    <Alert color="red" dismissible>
+    <Alert color="red" dismissable>
       <span class="font-medium">Data loading error:</span>
       {Object.values(dashboardData.errors).find(error => error !== null)}
       <button onclick={handleRefresh} class="ml-2 underline">
