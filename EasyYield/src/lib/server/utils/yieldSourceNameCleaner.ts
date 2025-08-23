@@ -58,7 +58,7 @@ function getDisplayNameAndDescription(
   if (!displayName || displayName.length < 2) {
     displayName = cleanName || 'Pool';
   }
-
+  // console.log({ displayName, description });
   return { displayName, description };
 }
 
@@ -251,7 +251,7 @@ export async function processYieldSourceData(
 
 export function extractTokenSymbols(displayName: string): string[] {
   // Extract symbols from names like "XRD/USDC Pool" or "XRD-USDT"
-  const pairMatch = displayName.match(/([A-Z]{2,10})[\/\-]([A-Z]{2,10})/);
+  const pairMatch = displayName.match(/([A-Z0-9_]+)[\/\-]([A-Z0-9_]+)/);
   if (pairMatch) {
     return [pairMatch[1], pairMatch[2]];
   }

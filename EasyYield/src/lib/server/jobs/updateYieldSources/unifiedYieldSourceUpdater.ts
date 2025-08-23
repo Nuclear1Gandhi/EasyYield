@@ -1,21 +1,20 @@
-import BigNumber from 'bignumber.js';
 import { HistoricalYieldModel } from '$server/mongo/models/HistoricalYieldDoc';
 import { YieldSourceModel } from '$server/mongo/models/YieldSource';
 import {
+  Protocols,
   YieldSourceType,
   type YieldSourceDocRaw,
 } from '$shared/typings/YieldSource';
 import { batchProcessYieldSources } from './yieldSourceProcessor';
-import type { CaviarNinePoolWithVault } from '$shared/typings/CaviarNine';
-import { YIELD_SOURCE_MAPPINGS, YieldSource } from '$lib/constants';
+import { YIELD_SOURCE_MAPPINGS } from '$lib/constants';
 
-interface RawYieldSource {
+interface RawYieldSource<P extends Protocols> {
   id: string;
   originalName: string;
   type: YieldSourceType;
   rawApy: string | number;
   rawTvl: string | number;
-  rawData: YieldSourceDocRaw<CaviarNinePoolWithVault>;
+  rawData: YieldSourceDocRaw<P, any>;
 }
 
 interface UpdateResult {
@@ -24,9 +23,9 @@ interface UpdateResult {
   updatedIds: string[];
 }
 
-export async function updateYieldSourcesBatch(
-  rawYieldSources: RawYieldSource[],
-  sourceName: YieldSource
+export async function updateYieldSourcesBatch<P extends Protocols>(
+  rawYieldSources: RawYieldSource<P>[],
+  sourceName: P
 ): Promise<UpdateResult> {
   if (rawYieldSources.length === 0) {
     console.log(`[INFO] No ${sourceName} yield sources to process`);
@@ -60,44 +59,31 @@ export async function updateYieldSourcesBatch(
   const now = new Date();
 
   for (const source of rawYieldSources) {
+    const data = processedData.get(source.id);
     try {
-      // ✅ Process APY and TVL with BigNumber precision (unified logic)
-      const apyBn = new BigNumber(source.rawApy.toString() || '0');
-      const tvlBn = new BigNumber(source.rawTvl.toString() || '0');
-
-      const apy = apyBn.decimalPlaces(6, BigNumber.ROUND_DOWN);
-      const tvl = tvlBn.decimalPlaces(0, BigNumber.ROUND_DOWN);
-
-      // ✅ Get processed name and icon data
-      const processedResult = processedData.get(source.id);
-      if (!processedResult) {
-        throw new Error(
-          `No processed data found for ${sourceName} source ${source.id}`
-        );
-      }
-
-      // ✅ Unified database update
       await YieldSourceModel.findOneAndUpdate(
         { yieldSourceId: source.id },
         {
           $set: {
             name: source.originalName,
+            displayName: data?.displayName,
+            description: data?.description,
+            tokenSymbols: data?.tokenSymbols,
 
-            // Processed data from unified processor
-            displayName: processedResult.displayName,
-            description: processedResult.description,
-            tokenSymbols: processedResult.tokenSymbols,
-            dappIcon: YIELD_SOURCE_MAPPINGS[sourceName].fallbackIcon,
-            dappName: YIELD_SOURCE_MAPPINGS[sourceName].name,
-            tokenIcons: processedResult.tokenIcons,
+            // Updated field names
+            protocolIcon: YIELD_SOURCE_MAPPINGS[sourceName].fallbackIcon,
+            protocolName: YIELD_SOURCE_MAPPINGS[sourceName].name,
+            tokenIcons: data?.tokenIcons,
 
             type: source.type,
-            currentApy: apy.toString(),
-            tvl: tvl.toString(),
+            currentApy: source.rawData.currentApy.toString(),
+            tvl: source.rawTvl.toString(),
             lastUpdated: now,
-            raw: source.rawData,
+            raw: source.rawData.raw,
             yieldSubSources: source.rawData.yieldSubSources,
             isComposite: source.rawData.isComposite,
+            features: source.rawData.features,
+            protocolMetadata: source.rawData.protocolMetadata,
           },
         },
         { upsert: true, new: true }
@@ -106,8 +92,8 @@ export async function updateYieldSourcesBatch(
       // ✅ Unified historical yield tracking
       await HistoricalYieldModel.create({
         yieldSourceId: source.id,
-        apy: apy.toNumber(),
-        tvl: tvl.toNumber(),
+        apy: source.rawData.currentApy.toString(),
+        tvl: source.rawTvl,
         timestamp: now,
       });
 

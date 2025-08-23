@@ -1,6 +1,59 @@
 import type { Document } from 'mongoose';
-import type { OciswapPool } from './Ociswap';
-import type { CaviarNinePoolWithVault } from './CaviarNine';
+
+export enum CaviarNinePoolType {
+  'SIMPLE_POOL' = 'SIMPLE_POOL',
+  'LSU_POOL' = 'LSU_POOL',
+  'SHAPED_POOL' = 'SHAPED_POOL',
+  'INDEX_POOL' = 'INDEX_POOL',
+}
+
+export enum Protocols {
+  'CAVIARNINE' = 'CAVIARNINE',
+  'OCISWAP' = 'OCISWAP',
+  'RADIX_STAKING' = 'RADIX_STAKING',
+}
+
+export enum Features {
+  'FEE_SHARING',
+  'GOVERNANCE' = 'GOVERNANCE',
+  'INSTANT_LIQUIDITY' = 'INSTANT_LIQUIDITY',
+  'NO_IL' = 'NO_IL',
+  'CURATED' = 'CURATED',
+  'CUSTOM_WEIGHTS' = 'CUSTOM_WEIGHTS',
+  'CONCENTRATED_LIQ' = 'CONCENTRATED_LIQ',
+}
+
+export type CaviarNineMetadata = {
+  protocol: Protocols.CAVIARNINE;
+  poolType: CaviarNinePoolType;
+  hasVault: boolean;
+  vaultAddress?: string;
+  weights?: Array<{ token: string; weight: number }>;
+  swapFee: string;
+};
+
+export type OciswapMetadata = {
+  protocol: Protocols.OCISWAP;
+  poolVersion: string;
+  tickSpacing?: number;
+  priceRange?: { min: string; max: string };
+};
+
+export type RadixStakingMetadata = {
+  protocol: Protocols.RADIX_STAKING;
+  validatorAddress: string;
+  validatorName: string;
+  uptimePercentage: number;
+  slashingEvents: number;
+};
+
+// Union type for protocol metadata
+export type ProtocolMetadata<P extends Protocols> =
+  P extends Protocols.CAVIARNINE
+    ? CaviarNineMetadata
+    : P extends Protocols.OCISWAP
+      ? OciswapMetadata
+      : RadixStakingMetadata;
 
 export enum YieldSourceType {
   LSU_POOL = 'LSU_POOL',
@@ -16,11 +69,12 @@ export type YieldSubSource = {
     | 'trading_fees'
     | 'liquidity_incentives'
     | 'arbitrage_premium'
-    | 'protocol_fees';
-  apy: string; // Individual APY contribution
+    | 'protocol_fees'
+    | 'protocol_revenue_sharing'; // Add missing type
+  apy: string;
   risk: 'low' | 'medium' | 'high' | 'variable';
-  description: string; // e.g., "Validator staking rewards from LSU pool"
-  isActive: boolean; // Some incentives are time-limited
+  description: string;
+  isActive: boolean;
   lastUpdated: Date;
 };
 
@@ -34,24 +88,34 @@ export type YieldSourceMetrics = {
   lastComputed: Date;
 };
 
-export type YieldSourceDocRaw<R = OciswapPool | CaviarNinePoolWithVault> = {
+export type YieldSourceDocRaw<P extends Protocols, R = any> = {
   yieldSourceId: string;
   name: string;
-  displayName: string;
+  displayName?: string;
   type: YieldSourceType;
   currentApy: string;
   tvl: string;
   lastUpdated: Date;
-  dappIcon: string; // e.g., 'caviarnine', 'ociswap', 'radix'
-  dappName: string;
-  tokenIcons: string[]; // e.g., ['xrd', 'usdc'] for XRD/USDC pair
-  tokenSymbols: string[]; // e.g., ['XRD', 'USDC']
+
+  // Standard metadata
+  protocolIcon: string;
+  protocolName: string;
+  tokenIcons: string[];
+  tokenSymbols: string[];
+
+  // Unified yield structure
+  isComposite: boolean;
+  yieldSubSources: YieldSubSource[];
+
+  // Unified features (truly agnostic)
+  features: Array<Features>;
+
+  // Protocol-specific metadata (discriminated union)
+  protocolMetadata: ProtocolMetadata<P>;
+
+  // Raw data storage
   raw: R;
-  // NEW: Multiple yield source breakdown
-  yieldSubSources?: YieldSubSource[]; // For CaviarNine's complex yields
-  isComposite?: boolean; // Flag to indicate multiple yield sources
-  hasVault?: boolean;
-  vaultCategory?: 'PREMIUM_VAULT' | 'BASIC_DEX';
 };
 
-export type YieldSourceDoc = Document & YieldSourceDocRaw;
+export type YieldSourceDoc<P extends Protocols, R = any> = Document &
+  YieldSourceDocRaw<P, R>;

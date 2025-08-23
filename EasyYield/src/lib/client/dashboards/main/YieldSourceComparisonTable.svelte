@@ -3,8 +3,8 @@
   import { formatLargeNumber } from '$client/utils/format';
   import type { YieldSourceDisplayData } from '$shared/typings/Api';
   import StartEarningButton from '$client/components/StartEarningButton/StartEarningButton.svelte';
-  import YieldSource from '../yieldSource/YieldSource.svelte';
   import YieldSourceCell from './YieldSourceCell.svelte';
+  import YieldSourceExpanded from './YieldSourceTableRow/Expanded/YieldSourceExpanded.svelte';
   
   let { yieldSources }: { yieldSources: YieldSourceDisplayData[] } = $props();
 
@@ -55,8 +55,28 @@
           source: row, 
         }
       })
-    }
+    },
   ];
+
+  // Function to render the expanded row content
+  function renderExpandedRow(yieldSource: YieldSourceDisplayData) {
+    return {
+      component: YieldSourceExpanded,
+      props: { yieldSource }
+    };
+  }
+
+  // Function to get unique ID for each row
+  function getYieldSourceId(yieldSource: YieldSourceDisplayData): string {
+    return yieldSource.id;
+  }
+
+  // Function to style rows (optional)
+  function getRowClass(item: YieldSourceDisplayData, index: number): string {
+    // Add any row-specific classes here
+    // return item.isComposite ? 'composite-row' : '';
+    return ''
+  }
 </script>
 
 <PaginatedTable
@@ -66,6 +86,10 @@
   title="Available Yield Opportunities"
   itemName="yield sources"
   pageSize={25}
+  expandable
+  expandedRowRender={renderExpandedRow}
+  getRowId={getYieldSourceId}
+  rowClass={getRowClass}
 />
 
 <style lang="scss">
@@ -92,6 +116,21 @@
     &.volatile {
       background: rgba(245, 158, 11, 0.1);
       color: rgb(245, 158, 11);
+    }
+  }
+
+  // Optional: Styling for composite rows
+  :global(.composite-row) {
+    position: relative;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: var(--blue-500);
     }
   }
 </style>

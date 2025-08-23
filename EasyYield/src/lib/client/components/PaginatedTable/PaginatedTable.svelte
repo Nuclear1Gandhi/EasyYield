@@ -3,22 +3,28 @@
   import { Button } from 'flowbite-svelte';
   import { goto } from '$app/navigation';
   import { browser } from '$app/environment';
-  import { untrack, type Snippet } from 'svelte';
+  import { untrack } from 'svelte';
   import { page } from '$app/state';
-
-  type Props = {
-    data: T[];
-    columns: Array<{
-      key: keyof T;
+  type Column = {
+      key: keyof RowItem;
       label: string;
       sortable?: boolean;
-      render?: (item: any) => string | { component: Snippet, props: any };
-    }>;
+      render?: (item: any) => string | { component: any, props: any };
+    }
+  type RowItem = T & { _id?: any, id?: any }
+  type Props = {
+    data: RowItem[];
+    columns: Column[];
     pageSize?: number;
     title?: string;
     itemName?: string;
-    rowClass: (item: T, index: number) => string,
+    rowClass: (item: RowItem, index: number) => string,
     syncWithUrl?: boolean; // New prop to enable URL sync
+
+    expandable?: boolean;
+    expandedRowRender?: (item: RowItem) => { component: any, props: any };
+    defaultExpandedRows?: Set<string>;
+    getRowId?: (item: RowItem) => string; // Function to get unique ID for each row
   };
 
   let { 
@@ -28,7 +34,11 @@
     title, 
     itemName = 'items',
     rowClass,
-    syncWithUrl = true 
+    syncWithUrl = true,
+    expandable,
+    expandedRowRender,
+    defaultExpandedRows,
+    getRowId,
   }: Props = $props();
 
   // Get URL params
@@ -36,17 +46,35 @@
   
   // Initialize state from URL params or defaults
   let currentPage = $state(1);
-  let sortBy: keyof T | undefined = $state(undefined);
+  let sortBy: keyof RowItem | undefined = $state(undefined);
   let sortAsc = $state(false);
   let currentPageSize = $state(pageSize);
   
+  let expandedRows = $state(new Set<string>(defaultExpandedRows || []));
+
+  function toggleRowExpansion(item: RowItem) {
+    const id = getRowId?.(item) || String(item.id || item._id);
+    
+    if (expandedRows.has(id)) {
+      expandedRows.delete(id);
+    } else {
+      expandedRows.add(id);
+    }
+    expandedRows = new Set(expandedRows); // Trigger reactivity
+  }
+
+  function isRowExpanded(item: RowItem): boolean {
+    const id = getRowId?.(item) || String(item.id || item._id);
+    return expandedRows.has(id);
+  }
+
   // Initialize from URL on mount
   $effect(() => {
     if (!browser || !syncWithUrl) return;
     untrack(() => {
 
       const urlPage = parseInt(searchParams.get('page') || '1');
-      const urlSortBy = searchParams.get('sortBy') as keyof T;
+      const urlSortBy = searchParams.get('sortBy') as keyof RowItem;
       const urlSortAsc = searchParams.get('sortAsc') === 'true';
       const urlPageSize = parseInt(searchParams.get('pageSize') || pageSize.toString());
       
@@ -77,50 +105,49 @@
     });
   }
 
-  let sortedData: T[] = $state([]);
-  let displayedData: T[] = $state([]);
+  let sortedData: RowItem[] = $state([]);
+  let displayedData: RowItem[] = $state([]);
   
   $effect(() => {
     data; currentPage; sortBy; sortAsc; currentPageSize
     untrack(() => {
-      if (!sortBy) {
-        const startIndex = (currentPage - 1) * currentPageSize;
-        const endIndex = startIndex + currentPageSize;
-        displayedData = data.slice(startIndex, endIndex);
-        return;
-      }
-      sortedData = [...data].sort((a, b) => {
-        const aVal = a[sortBy as keyof T];
-        const bVal = b[sortBy as keyof T];
-        
-        // Handle numeric sorting
-        if (typeof aVal === 'string' && typeof bVal === 'string') {
-          const aNum = parseFloat(aVal);
-          const bNum = parseFloat(bVal);
-          if (!isNaN(aNum) && !isNaN(bNum)) {
-            return sortAsc ? aNum - bNum : bNum - aNum;
+      // Always set sortedData
+      if (sortBy) {
+        sortedData = [...data].sort((a, b) => {
+          const aVal = a[sortBy as keyof RowItem];
+          const bVal = b[sortBy as keyof RowItem];
+          
+          // Handle numeric sorting
+          if (typeof aVal === 'string' && typeof bVal === 'string') {
+            const aNum = parseFloat(aVal);
+            const bNum = parseFloat(bVal);
+            if (!isNaN(aNum) && !isNaN(bNum)) {
+              return sortAsc ? aNum - bNum : bNum - aNum;
+            }
           }
-        }
-        
-        // String/generic sorting
-        return sortAsc
-          ? aVal > bVal ? 1 : -1
-          : aVal < bVal ? 1 : -1;
-      });
-  
-      // Calculate pagination
+          
+          // String/generic sorting
+          return sortAsc
+            ? aVal > bVal ? 1 : -1
+            : aVal < bVal ? 1 : -1;
+        });
+      } else {
+        sortedData = data; // No sorting, just use original data
+      }
+
+      // Calculate pagination from sortedData
       const startIndex = (currentPage - 1) * currentPageSize;
       const endIndex = startIndex + currentPageSize;
       displayedData = sortedData.slice(startIndex, endIndex);
     });
-    })
+  })
 
   // Pagination calculations
   let totalPages = $derived(Math.ceil(sortedData.length / currentPageSize));
   let startItem = $derived((currentPage - 1) * currentPageSize + 1);
   let endItem = $derived(Math.min(currentPage * currentPageSize, sortedData.length));
 
-  function doSort(field: keyof T) {
+  function doSort(field: keyof RowItem) {
     if (sortBy === field) {
       sortAsc = !sortAsc;
     } else {
@@ -170,6 +197,13 @@
 
     return rangeWithDots.filter((item, index, array) => array.indexOf(item) === index);
   });
+
+  function getRenderedContent(item: RowItem, column: Column) {
+    if (!column.render) return item[column.key];
+    
+    const rendered = column.render(item);
+    return rendered;
+  }
 </script>
 
 <div class="paginated-table-container">
@@ -205,6 +239,7 @@
               </div>
             </th>
           {/each}
+          
         </tr>
       </thead>
       <tbody>
@@ -212,8 +247,8 @@
           <tr class={rowClass ? rowClass(item, index) : ''}>
             {#each columns as column}
               <td>
-                {#if column.render}
-                  {@const rendered = column.render(item)}
+                 {#if column.render}
+                  {@const rendered = getRenderedContent(item, column)}
                   {#if typeof rendered === 'string'}
                     {@html rendered}
                   {:else}
@@ -225,7 +260,31 @@
                 {/if}
               </td>
             {/each}
+
+            {#if expandable}
+              <td class="expand-cell">
+                <button 
+                  class="expand-button"
+                  onclick={() => toggleRowExpansion(item)}
+                  aria-label={isRowExpanded(item) ? 'Collapse row' : 'Expand row'}
+                >
+                  <Icon 
+                    icon={isRowExpanded(item) ? 'tabler:chevron-up' : 'tabler:chevron-down'} 
+                    width="16" 
+                  />
+                </button>
+              </td>
+            {/if}
           </tr>
+
+          {#if expandable && isRowExpanded(item) && expandedRowRender}
+            {@const { component: Component, props } = expandedRowRender(item)}
+            <tr class="expanded-row">
+              <td colspan={expandable ? columns.length + 1 : columns.length} class="expanded-cell">
+                <Component {...props} />
+              </td>
+            </tr>
+          {/if}
         {/each}
       </tbody>
     </table>
@@ -278,7 +337,7 @@
           Show:
           <select 
             value={currentPageSize} 
-            onchange={(e) => changePageSize(parseInt(e.target?.value))}
+            onchange={(e: any) => changePageSize(parseInt(e.target?.value ))}
           >
             <option value={10}>10</option>
             <option value={25}>25</option>
@@ -334,7 +393,7 @@
 .paginated-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 600px;
+  // min-width: 600px;
 
   th, td {
     padding: 12px 14px;
@@ -412,6 +471,47 @@
     color: var(--fg);
     margin: 0 4px;
   }
+}
+
+.expand-cell {
+  width: 48px;
+  padding: 8px !important;
+}
+
+.expand-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+  color: var(--gray-400);
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: var(--surface-2);
+    color: var(--gray-200);
+  }
+}
+
+.expand-header {
+  width: 48px;
+}
+
+.expanded-row {
+  background: var(--surface-1);
+  
+  &:hover {
+    background: var(--surface-1) !important;
+  }
+}
+
+.expanded-cell {
+  padding: 0 !important;
+  border-top: 1px solid var(--border-weak);
 }
 </style>
 

@@ -1,9 +1,15 @@
-import type { YieldSourceType, YieldSubSource } from './YieldSource';
+import type {
+  YieldSourceType,
+  YieldSubSource,
+  Features,
+  Protocols,
+  ProtocolMetadata,
+} from './YieldSource';
 
 export interface YieldSourceResponse {
   yieldSourceId: string;
   name: string;
-  type: 'caviarnine' | 'xrd-staking' | 'ociswap';
+  type: Protocols; // Updated to use Protocols enum instead of strings
   currentApy: string; // BigNumber string
   tvl: string; // BigNumber string
   lastUpdated: string;
@@ -12,7 +18,7 @@ export interface YieldSourceResponse {
   tvlChange7d: string | null;
 }
 
-export interface YieldSourceDisplayData {
+export type YieldSourceDisplayData<R = any> = {
   id: string;
   name: string;
   displayName?: string;
@@ -21,9 +27,9 @@ export interface YieldSourceDisplayData {
   tvl: string;
   lastUpdated: string;
 
-  // Icon/visual data from DB
-  dappIcon?: string;
-  dappName?: string;
+  // Updated field names to match schema
+  protocolIcon?: string; // was dappIcon
+  protocolName?: string; // was dappName
   tokenIcons: string[];
   tokenSymbols: string[];
 
@@ -38,14 +44,45 @@ export interface YieldSourceDisplayData {
   status: 'growing' | 'stable' | 'volatile';
   volatility?: number;
 
+  // Updated unified structure
   isComposite?: boolean;
   yieldSubSources?: YieldSubSource[];
-  hasVault: boolean;
-  vaultCategory: 'BASIC_DEX' | 'PREMIUM_VAULT';
-  riskProfile?: 'low' | 'medium' | 'high' | 'mixed'; // Aggregate risk
-}
 
-// Portfolio data (you might have this from wallet integration)
+  // New unified features
+  features?: Features[];
+  protocolMetadata?: ProtocolMetadata<Protocols>; // Type-safe protocol metadata
+
+  // Legacy fields (for backward compatibility during transition)
+  hasVault?: boolean;
+  vaultCategory?: 'BASIC_DEX' | 'PREMIUM_VAULT';
+  riskProfile?: 'low' | 'medium' | 'high' | 'mixed'; // Aggregate risk
+
+  raw: R;
+};
+
+// Helper type for protocol-specific display data
+export type CaviarNineDisplayData = YieldSourceDisplayData & {
+  protocolMetadata: Extract<
+    ProtocolMetadata<Protocols>,
+    { protocol: Protocols.CAVIARNINE }
+  >;
+};
+
+export type OciswapDisplayData = YieldSourceDisplayData & {
+  protocolMetadata: Extract<
+    ProtocolMetadata<Protocols>,
+    { protocol: Protocols.OCISWAP }
+  >;
+};
+
+export type RadixStakingDisplayData = YieldSourceDisplayData & {
+  protocolMetadata: Extract<
+    ProtocolMetadata<Protocols>,
+    { protocol: Protocols.RADIX_STAKING }
+  >;
+};
+
+// Portfolio data (unchanged but could be enhanced)
 export interface YieldSourceData {
   totalValue: string;
   totalYield: string;
@@ -58,10 +95,43 @@ export interface YieldSourcePosition {
   amount: string;
   value: string;
   apy: string;
+  protocol?: Protocols; // Added for better categorization
+  features?: Features[]; // Show what features this position has
 }
 
 export interface YieldSourceHistoricalData {
   date: string;
   apy: string;
   tvl: string;
+}
+
+// New enhanced filter types
+export interface YieldSourceFilters {
+  protocols?: Protocols[];
+  features?: Features[];
+  minApy?: number;
+  maxRisk?: 'low' | 'medium' | 'high';
+  hasCompositeYield?: boolean;
+  poolTypes?: {
+    caviarNine?: ('SIMPLE_POOL' | 'LSU_POOL' | 'SHAPED_POOL' | 'INDEX_POOL')[];
+    // Add other protocol-specific filters as needed
+  };
+}
+
+// Helper type for feature-based categorization
+export interface FeatureSummary {
+  hasGovernance: boolean;
+  hasFeeSharing: boolean;
+  hasInstantLiquidity: boolean;
+  hasNoIL: boolean;
+  isCurated: boolean;
+  hasCustomWeights: boolean;
+  hasConcentratedLiquidity: boolean;
+}
+
+// Enhanced comparison type for cross-protocol analysis
+export interface YieldSourceComparison {
+  basic: YieldSourceDisplayData[];
+  enhanced: YieldSourceDisplayData[]; // Has premium features
+  premium: YieldSourceDisplayData[]; // Has multiple premium features
 }

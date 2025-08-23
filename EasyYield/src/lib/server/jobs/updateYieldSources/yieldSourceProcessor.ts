@@ -1,11 +1,10 @@
-import type { YieldSource } from '$lib/constants';
 import { batchProcessIcons } from '$server/utils/iconProcessor';
 import {
   batchFetchResourceNames,
   cleanYieldSourceNameWithCache,
   extractTokenSymbols,
 } from '$server/utils/yieldSourceNameCleaner';
-import type { YieldSourceType } from '$shared/typings/YieldSource';
+import type { Protocols, YieldSourceType } from '$shared/typings/YieldSource';
 import { extractResourceAddresses } from '$shared/utils/dataTransform';
 
 interface YieldSourceProcessingResult {
@@ -22,7 +21,7 @@ export async function batchProcessYieldSources(
     id: string;
     originalName: string;
     yieldSourceType: YieldSourceType;
-    yieldSourceName: YieldSource;
+    yieldSourceName: Protocols;
   }>
 ): Promise<Map<string, YieldSourceProcessingResult>> {
   // Step 1: Pre-fetch resource names
@@ -73,6 +72,5 @@ export async function batchProcessYieldSources(
       ...iconData,
     });
   });
-
   return finalResults;
 }

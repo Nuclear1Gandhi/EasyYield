@@ -104,3 +104,116 @@ export interface FeeVaultsResponse {
 
 // Example usage:
 // const response: FeeVaultsResponse = await ky.get(...).json();
+
+export type CaviarNineLSUPool = {
+  // Pool identification
+  pool_address: string;
+  pool_id?: string;
+
+  // LSU Token information
+  lsu_token_address: string;
+  lsu_token_symbol?: string;
+  lsu_token_name?: string;
+
+  // Underlying staking information
+  underlying_validator_addresses?: string[];
+  total_stake_units?: string;
+
+  // Financial metrics
+  total_value_locked: string; // In XRD
+  apy?: number;
+  current_exchange_rate?: string; // LSU to XRD rate
+  nav_price?: string; // Net Asset Value price
+  market_price?: string;
+
+  // Pool metrics
+  total_lsu_supply?: string;
+  backing_xrd_amount?: string;
+  liquidity_pool_tvl?: string;
+
+  // Trading/swap information
+  trading_volume_24h?: string;
+  trading_volume_7d?: string;
+  swap_count_24h?: number;
+
+  // Yield breakdown
+  staking_apy?: number;
+  trading_fees_apy?: number;
+  protocol_rewards_apy?: number;
+
+  // Pool features
+  instant_swap_enabled?: boolean;
+  instant_unstake_enabled?: boolean;
+  impermanent_loss_protection?: boolean;
+
+  // Fee structure
+  management_fee?: number; // As percentage
+  performance_fee?: number;
+  swap_fee?: number;
+  unstake_fee?: number;
+
+  // Timestamps
+  created_at?: string;
+  last_updated?: string;
+
+  // Pool status
+  is_active?: boolean;
+  is_deprecated?: boolean;
+
+  // Additional metadata
+  description?: string;
+  pool_type?: 'LSU_BASIC' | 'LSU_ENHANCED' | 'LSU_HYPERSTAKE';
+
+  // Validator information (for LSU pools)
+  validators?: Array<{
+    address: string;
+    allocation_percentage: number;
+    uptime?: number;
+    fee_percentage?: number;
+  }>;
+
+  // Revenue sharing (specific to CaviarNine's model)
+  revenue_sharing?: {
+    trading_revenue_share?: number;
+    protocol_revenue_share?: number;
+    validator_reward_share?: number;
+  };
+
+  // Risk metrics
+  volatility_30d?: number;
+  max_drawdown?: number;
+  correlation_with_xrd?: number;
+};
+
+// Extended interface for internal processing
+export type CaviarNineLSUPoolWithMetrics = {
+  // Computed metrics
+  premium_discount?: number; // Market price vs NAV
+  liquidity_utilization?: number;
+  volume_to_tvl_ratio?: number;
+
+  // Enhanced yield breakdown
+  effective_apy?: number;
+  compound_frequency?: 'CONTINUOUS' | 'DAILY' | 'WEEKLY';
+
+  // Additional tracking
+  price_history_7d?: Array<{
+    timestamp: string;
+    price: number;
+    volume?: number;
+  }>;
+
+  // Pool health indicators
+  health_score?: number;
+  risk_rating?: 'LOW' | 'MEDIUM' | 'HIGH';
+} & CaviarNineLSUPool;
+
+// For API responses that might contain multiple pools
+export type CaviarNineLSUPoolResponse = {
+  pools: CaviarNineLSUPool[];
+  total_count?: number;
+  page?: number;
+  limit?: number;
+  total_tvl?: string;
+  average_apy?: number;
+};

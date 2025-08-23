@@ -1,6 +1,7 @@
 import { getDappInfo, batchFetchTokenIcons } from './iconFetcher';
 import { getFallbackTokenIcon } from '$shared/utils/dataTransform';
-import { YIELD_SOURCE_MAPPINGS, YieldSource } from '$lib/constants';
+import { YIELD_SOURCE_MAPPINGS } from '$lib/constants';
+import type { Protocols } from '$shared/typings/YieldSource';
 
 interface IconData {
   dappIcon?: string;
@@ -9,7 +10,7 @@ interface IconData {
 }
 
 export async function processYieldSourceIcons(
-  yieldSource: YieldSource,
+  yieldSource: Protocols,
   resourceAddresses: string[],
   tokenSymbols: string[]
 ): Promise<IconData> {
@@ -42,7 +43,7 @@ export async function processYieldSourceIcons(
 // Batch process icons for multiple yield sources
 export async function batchProcessIcons(
   yieldSources: Array<{
-    yieldSourceName: YieldSource;
+    yieldSourceName: Protocols;
     resourceAddresses: string[];
     tokenSymbols: string[];
   }>

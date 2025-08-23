@@ -86,6 +86,13 @@ export type PoolTokenStats = {
   };
 };
 
+export enum OciswapPoolType {
+  DEX_PAIR = 'DEX_PAIR',
+  CONCENTRATED_LIQUIDITY = 'CONCENTRATED_LIQUIDITY',
+  STABLE_PAIR = 'STABLE_PAIR',
+  WEIGHTED_POOL = 'WEIGHTED_POOL',
+}
+
 export type OciswapPool = {
   address: string;
   apr: Apr;

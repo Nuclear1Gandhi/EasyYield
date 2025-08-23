@@ -1,30 +1,47 @@
-<!-- src/client/components/YieldSourceCell.svelte -->
 <script lang="ts">
   import DappBadge from "$client/components/DappBadge/DappBadge.svelte";
   import TokenPairIcon from "$client/components/TokenPairIcon/TokenPairIcon.svelte";
+  import { Features } from "$shared/typings/YieldSource";
   import type { YieldSourceDisplayData } from "$shared/typings/Api";
 
   let { row }: { row: YieldSourceDisplayData } = $props();
 
-  // Vault categorization logic
-  let hasVault = $derived(row.hasVault || false);
-  let vaultCategory = $derived(row.vaultCategory || 'BASIC_DEX');
+  // Determine special characteristics - only show what's notable
+  let specialFeatures = $derived(() => {
+    const notable = [];
+    
+    if (row.features?.includes(Features.NO_IL)) notable.push('No IL');
+    if (row.features?.includes(Features.FEE_SHARING)) notable.push('Fee Share');
+    if (row.features?.includes(Features.GOVERNANCE)) notable.push('Governance');
+    if (row.features?.includes(Features.INSTANT_LIQUIDITY)) notable.push('Instant Exit');
+    if (row.features?.includes(Features.CURATED)) notable.push('Curated');
+    if (row.features?.includes(Features.CONCENTRATED_LIQ)) notable.push('Concentrated');
+    
+    return notable;
+  });
+  
   let isComposite = $derived(row.isComposite || false);
+  let isHighRisk = $derived(row.riskProfile === 'high' || row.riskProfile === 'mixed');
+  let isLowRisk = $derived(row.riskProfile === 'low');
   
-  // Display labels based on vault status
-  let vaultLabel = $derived(hasVault ? 'Premium Vault' : 'Basic Pool');
-  let vaultIcon = $derived(hasVault ? '🏦' : '💧');
+  // Only show badges for notable characteristics
+  let shouldShowSpecialBadge = $derived(specialFeatures().length > 0);
+  let shouldShowRiskBadge = $derived(isHighRisk || isLowRisk);
   
-  // Benefit indicators
-  let vaultBenefits = $derived(hasVault ? [
-    'Protocol Revenue Sharing',
-    'Enhanced APY',
-    'Governance Rewards',
-    'Advanced Features'
-  ] : ['Standard Trading Fees']);
+  // Primary special feature for main badge
+  let primaryFeature = $derived(specialFeatures()[0] || null);
+  
+  // Badge styling based on feature type
+  let badgeStyle = $derived(() => {
+    if (row.features?.includes(Features.NO_IL)) return 'no-risk';
+    if (row.features?.includes(Features.FEE_SHARING)) return 'premium';
+    if (row.features?.includes(Features.GOVERNANCE)) return 'governance';
+    if (row.features?.includes(Features.CURATED)) return 'curated';
+    return 'standard';
+  });
 </script>
 
-<div class="yield-source-cell" class:has-vault={hasVault}>
+<div class="yield-source-cell" class:has-special-features={shouldShowSpecialBadge}>
   <TokenPairIcon 
     tokenIcons={row.tokenIcons} 
     tokenSymbols={row.tokenSymbols}
@@ -37,15 +54,21 @@
         {row.displayName || row.name}
       </span>
       
-      <!-- Vault Status Badge -->
-      <div class="vault-badge" class:premium={hasVault} class:basic={!hasVault}>
-        <span class="vault-icon">{vaultIcon}</span>
-        <span class="vault-label">{vaultLabel}</span>
-      </div>
+      <!-- Only show special feature badge if there are notable features -->
+      {#if shouldShowSpecialBadge}
+        <div class="feature-badge {badgeStyle}">
+          <span class="feature-label">{primaryFeature}</span>
+          {#if specialFeatures().length > 1}
+            <span class="feature-count">+{specialFeatures().length - 1}</span>
+          {/if}
+        </div>
+      {/if}
+      
+     
       
       <DappBadge
-        dappIcon={row.dappIcon} 
-        dappName={row.dappName}
+        dappIcon={row.protocolIcon} 
+        dappName={row.protocolName}
         size="sm" 
       />
     </div>
@@ -53,24 +76,36 @@
     <div class="yield-details">
       <div class="yield-source-type">
         {row.type}
-        {#if isComposite}
-          <span class="composite-indicator">• Composite Yield</span>
+        {#if row.status === 'growing'}
+          <span class="status-indicator growing">📈 Growing</span>
+        {:else if row.status === 'volatile'}
+          <span class="status-indicator volatile">📊 Volatile</span>
         {/if}
+         <!-- Risk badge only for notable risk levels -->
+      {#if shouldShowRiskBadge}
+        <div class="risk-badge" class:high-risk={isHighRisk} class:low-risk={isLowRisk}>
+          {isHighRisk ? '⚠️' : '🛡️'}
+          <span class="risk-label">
+            {isHighRisk ? 'High Risk' : 'Low Risk'}
+          </span>
+        </div>
+      {/if}
+      
+      <!-- Composite indicator -->
+      {#if isComposite}
+        <div class="composite-badge">
+          <span class="composite-icon">⚡</span>
+          <span class="composite-label">Multi-Source</span>
+        </div>
+      {/if}
       </div>
       
-      <!-- Vault Benefits Preview -->
-      {#if hasVault}
-        <div class="vault-benefits">
+      <!-- Feature benefits - only show if there are special features -->
+      {#if specialFeatures().length > 0}
+        <div class="feature-benefits">
           <span class="benefit-preview">
-            {vaultBenefits.slice(0, 2).join(' • ')}
+            {specialFeatures().slice(0, 3).join(' • ')}
           </span>
-          {#if vaultBenefits.length > 2}
-            <span class="more-benefits">+{vaultBenefits.length - 2} more</span>
-          {/if}
-        </div>
-      {:else}
-        <div class="basic-pool-info">
-          <span class="limitation-note">Standard DEX pool - trading fees only</span>
         </div>
       {/if}
     </div>
@@ -86,30 +121,31 @@
   border-radius: 8px;
   transition: all 0.2s ease;
 
-  &.has-vault {
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(147, 51, 234, 0.05) 100%);
-    border-left: 3px solid var(--blue-500);
+  &.has-special-features {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.03) 0%, rgba(147, 51, 234, 0.03) 100%);
+    border-left: 2px solid var(--blue-400);
   }
 
   &:hover {
     background: var(--gray-50);
     
-    &.has-vault {
-      background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(147, 51, 234, 0.08) 100%);
+    &.has-special-features {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.06) 0%, rgba(147, 51, 234, 0.06) 100%);
     }
   }
 }
 
 .yield-source-info {
   flex: 1;
-  min-width: 0; // Allow text truncation
+  min-width: 0;
 }
 
 .name-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   margin-bottom: 4px;
+  flex-wrap: wrap;
 }
 
 .yield-source-name {
@@ -123,17 +159,24 @@
   flex-shrink: 1;
 }
 
-.vault-badge {
+// Feature badge with different styles based on feature type
+.feature-badge {
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 11px;
+  gap: 3px;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-size: 10px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.3px;
   flex-shrink: 0;
+
+  &.no-risk {
+    background: linear-gradient(135deg, var(--green-100) 0%, var(--emerald-100) 100%);
+    color: var(--green-700);
+    border: 1px solid var(--green-200);
+  }
 
   &.premium {
     background: linear-gradient(135deg, var(--blue-100) 0%, var(--purple-100) 100%);
@@ -141,20 +184,76 @@
     border: 1px solid var(--blue-200);
   }
 
-  &.basic {
-    background: var(--gray-100);
-    color: var(--gray-600);
-    border: 1px solid var(--gray-200);
+  &.governance {
+    background: linear-gradient(135deg, var(--purple-100) 0%, var(--pink-100) 100%);
+    color: var(--purple-700);
+    border: 1px solid var(--purple-200);
+  }
+
+  &.curated {
+    background: linear-gradient(135deg, var(--amber-100) 0%, var(--yellow-100) 100%);
+    color: var(--amber-700);
+    border: 1px solid var(--amber-200);
+  }
+
+  .feature-label {
+    font-size: 9px;
+    line-height: 1;
+  }
+
+  .feature-count {
+    font-size: 8px;
+    opacity: 0.8;
   }
 }
 
-.vault-icon {
-  font-size: 10px;
+.risk-badge {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 1px 5px;
+  border-radius: 8px;
+  font-size: 9px;
+  font-weight: 500;
+  flex-shrink: 0;
+
+  &.high-risk {
+    background: var(--red-100);
+    color: var(--red-700);
+    border: 1px solid var(--red-200);
+  }
+
+  &.low-risk {
+    background: var(--green-100);
+    color: var(--green-700);
+    border: 1px solid var(--green-200);
+  }
+
+  .risk-label {
+    font-size: 8px;
+  }
 }
 
-.vault-label {
-  font-size: 10px;
-  line-height: 1;
+.composite-badge {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 1px 5px;
+  border-radius: 8px;
+  font-size: 9px;
+  font-weight: 500;
+  background: var(--indigo-100);
+  color: var(--indigo-700);
+  border: 1px solid var(--indigo-200);
+  flex-shrink: 0;
+
+  .composite-icon {
+    font-size: 8px;
+  }
+
+  .composite-label {
+    font-size: 8px;
+  }
 }
 
 .yield-details {
@@ -166,7 +265,7 @@
 .yield-source-type {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   font-size: 12px;
   color: var(--gray-500);
   font-weight: 500;
@@ -174,39 +273,30 @@
   letter-spacing: 0.5px;
 }
 
-.composite-indicator {
-  color: var(--blue-600);
+.status-indicator {
+  font-size: 10px;
   font-weight: 600;
   text-transform: none;
   letter-spacing: normal;
+
+  &.growing {
+    color: var(--green-600);
+  }
+
+  &.volatile {
+    color: var(--orange-600);
+  }
 }
 
-.vault-benefits {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 11px;
+.feature-benefits {
+  font-size: 10px;
   color: var(--blue-600);
   font-weight: 500;
+  opacity: 0.8;
 }
 
 .benefit-preview {
   color: var(--blue-700);
-}
-
-.more-benefits {
-  color: var(--blue-500);
-  font-weight: 600;
-  font-style: italic;
-}
-
-.basic-pool-info {
-  font-size: 11px;
-}
-
-.limitation-note {
-  color: var(--gray-500);
-  font-style: italic;
 }
 
 // Responsive adjustments
@@ -215,22 +305,29 @@
     gap: 8px;
   }
   
+  .name-row {
+    gap: 4px;
+  }
+  
   .yield-source-name {
     max-width: 120px;
     font-size: 13px;
   }
   
-  .vault-badge {
-    padding: 1px 6px;
+  .feature-badge,
+  .risk-badge,
+  .composite-badge {
+    padding: 1px 4px;
+    
+    .feature-label,
+    .risk-label,
+    .composite-label {
+      font-size: 8px;
+    }
   }
   
-  .vault-label {
+  .feature-benefits {
     font-size: 9px;
-  }
-  
-  .vault-benefits,
-  .basic-pool-info {
-    font-size: 10px;
   }
 }
 </style>

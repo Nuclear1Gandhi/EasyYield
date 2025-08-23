@@ -12,6 +12,7 @@
     "module": "ESNext",
     "moduleResolution": "Node"
   },
+  "include": ["src/**/*.d.ts", "src/**/*.js", "src/**/*.ts", "src/**/*.svelte"],
   "ts-node": {
     "esm": true
   }

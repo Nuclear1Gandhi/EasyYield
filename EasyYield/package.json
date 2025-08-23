@@ -12,7 +12,8 @@
     "preinstall:mongo": "node ./src/scripts/preinstall-mongo.js",
     "test": "vitest",
     "seed": "tsx ./src/scripts/seedYieldSources",
-    "update": "tsx ./src/scripts/updateYieldSources",
+    "update:src": "tsx ./src/scripts/updateYieldSources",
+    "update:vld": "tsx ./src/scripts/updateValidators.ts",
     "find-dapps": "tsx --env-file=.env ./src/scripts/findDapps.ts"
   },
   "devDependencies": {

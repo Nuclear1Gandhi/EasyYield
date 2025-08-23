@@ -5,6 +5,10 @@
   import { onMount } from 'svelte';
   import { useRadixAuth } from '$client/hooks/useRadixAuth';
   import { type NavKey } from '../Sidebar/Sidebar.svelte';
+  import type { YieldSourceDisplayData } from '$shared/typings/Api';
+  import MainSearch from './MainSearch.svelte';
+  import { goto } from '$app/navigation';
+  import { Protocols } from '$shared/typings/YieldSource';
 
   type Props =  {  }
   let {  }: Props = $props()
@@ -22,12 +26,41 @@
 
   let sidebarOpen = $state(false);
   let activeNav = $state<NavKey>('dashboard');
-
-  function handleNavSelect(key: NavKey) {
-    activeNav = key;
-    sidebarOpen = false; // Close drawer after selection on mobile
-    // Optionally, route here if needed
+  function handleSearchSelect(result: YieldSourceDisplayData) {
+    let externalUrl: string | null = null;
+    
+    // Determine the external URL based on the dapp
+    switch (result.protocolMetadata?.protocol) {
+      case Protocols.CAVIARNINE:
+        // CaviarNine pool URL format
+        externalUrl = `https://app.caviarnine.com/pool/${result.id}`;
+        break;
+        
+      case Protocols.OCISWAP:
+        // Ociswap pool URL format
+        externalUrl = `https://ociswap.com/pools/${result.id}`;
+        break;
+        
+      default:
+        // Fallback: try to construct a generic pool URL
+        if (result.id.startsWith('component_rdx1')) {
+          // This looks like a Radix component address
+          externalUrl = `https://radixscan.io/account/${result.id}`;
+        }
+        break;
+    }
+    
+    if (externalUrl) {
+      // Open in new tab
+      window.open(externalUrl, '_blank', 'noopener,noreferrer');
+    } else {
+      console.warn(`No external URL mapping found for ${result.protocolName} pool: ${result.id}`);
+      
+      // Fallback: show a toast notification or modal with pool details
+      // toast.info(`Selected ${result.displayName || result.name} (${result.apy}% APY)`);
+    }
   }
+
 </script>
 
 <header class="app-header">
@@ -46,20 +79,15 @@
 
   <div class="top-actions">
     <div class="search">
-      <Input placeholder="Search yield sources...">
-        <span slot="left">
-          <Icon icon={iSearch} width="18" height="18" />
-        </span>
-      </Input>
+      <MainSearch
+        placeholder="Search yield sources..." 
+        onSelect={handleSearchSelect}
+      />
     </div>
     
     <div class="right-actions">
-    
-      <radix-connect-button ></radix-connect-button>
+      <radix-connect-button></radix-connect-button>
     </div>
-    <!-- <Button color="alternative">
-      <Icon icon={iCog} width="18" height="18" class="mr-2" /> Settings
-    </Button> -->
   </div>
 </header>
 <!-- Mobile Drawer sidebar -->
