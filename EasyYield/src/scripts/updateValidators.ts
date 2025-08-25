@@ -8,7 +8,7 @@
  * validator metadata.
  */
 
-import { RadixGatewayClient } from '$server/services/gatewayClient';
+import { RadixGatewayClient } from '$server/api/gateway/gatewayClient';
 import { ValidatorModel } from '$server/mongo/models/Validator';
 import type {
   ValidatorDoc,

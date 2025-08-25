@@ -1,5 +1,5 @@
 import { updateYieldSourcesJob } from '$server/jobs/updateYieldSources/updateYieldSources';
-import 'dotenv/config'; // Load .env into process.env
+import 'dotenv/config'; 
 import mongoose from 'mongoose';
 
 async function main() {
@@ -12,7 +12,7 @@ async function main() {
   try {
     console.log('Connecting to MongoDB…');
     await mongoose.connect(uri, {
-        dbName: process.env.MONGODB_DB_NAME || undefined, 
+      dbName: process.env.MONGODB_DB_NAME || undefined, 
     });
     console.log('Running updateYieldSourcesJob…');
     const result = await updateYieldSourcesJob();

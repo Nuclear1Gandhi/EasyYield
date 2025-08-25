@@ -1,19 +1,15 @@
 import { HistoricalYieldModel } from '$server/mongo/models/HistoricalYieldDoc';
 import { YieldSourceModel } from '$server/mongo/models/YieldSource';
 import {
-  Protocols,
+  Dapps,
   YieldSourceType,
   type YieldSourceDocRaw,
 } from '$shared/typings/YieldSource';
-import { batchProcessYieldSources } from './yieldSourceProcessor';
 import { YIELD_SOURCE_MAPPINGS } from '$lib/constants';
 
-interface RawYieldSource<P extends Protocols> {
+interface RawYieldSource<P extends Dapps> {
   id: string;
   originalName: string;
-  type: YieldSourceType;
-  rawApy: string | number;
-  rawTvl: string | number;
   rawData: YieldSourceDocRaw<P, any>;
 }
 
@@ -23,7 +19,27 @@ interface UpdateResult {
   updatedIds: string[];
 }
 
-export async function updateYieldSourcesBatch<P extends Protocols>(
+// ✅ SIMPLIFIED: Extract data directly from rawData.metadata
+function extractTokenDataFromMetadata(metadata: any) {
+  if (!metadata?.tokens) {
+    return {
+      tokenSymbols: [],
+      tokenIcons: [],
+    };
+  }
+
+  const tokens = Object.values(metadata.tokens) as Array<{
+    symbol: string;
+    iconUrl: string;
+  }>;
+
+  return {
+    tokenSymbols: tokens.map(token => token.symbol),
+    tokenIcons: tokens.map(token => token.iconUrl),
+  };
+}
+
+export async function updateYieldSourcesBatch<P extends Dapps>(
   rawYieldSources: RawYieldSource<P>[],
   sourceName: P
 ): Promise<UpdateResult> {
@@ -32,52 +48,39 @@ export async function updateYieldSourcesBatch<P extends Protocols>(
     return { updates: 0, errors: 0, updatedIds: [] };
   }
 
-  // ✅ STEP 1: Prepare data for batch processing
-  const yieldSourcesForProcessing = rawYieldSources.map((source) => ({
-    id: source.id,
-    originalName: source.originalName,
-    yieldSourceType: source.type,
-    yieldSourceName: sourceName,
-  }));
-
-  // ✅ STEP 2: Batch process all names and icons
-  console.log(
-    `[INFO] Processing ${rawYieldSources.length} ${sourceName} yield sources...`
-  );
-  const startTime = Date.now();
-  const processedData = await batchProcessYieldSources(
-    yieldSourcesForProcessing
-  );
-  console.log(
-    `[INFO] ${sourceName} batch processing completed in ${Date.now() - startTime}ms`
-  );
-
-  // ✅ STEP 3: Update database with processed data
+  console.log(`[INFO] Updating ${rawYieldSources.length} ${sourceName} yield sources...`);
+  
   let updates = 0;
   let errors = 0;
   const updatedIds: string[] = [];
   const now = new Date();
 
   for (const source of rawYieldSources) {
-    const data = processedData.get(source.id);
     try {
+      // ✅ Extract token data directly from existing metadata
+      const { tokenSymbols, tokenIcons } = extractTokenDataFromMetadata(
+        source.rawData.metadata
+      );
+      console.log(source.rawData)
+      // ✅ Get protocol info from mappings
+      const protocolMapping = YIELD_SOURCE_MAPPINGS[sourceName];
       await YieldSourceModel.findOneAndUpdate(
         { yieldSourceId: source.id },
         {
           $set: {
             name: source.originalName,
-            displayName: data?.displayName,
-            description: data?.description,
-            tokenSymbols: data?.tokenSymbols,
+            displayName: source.originalName,
+            description: getDescriptionByType(source.rawData.type),
+            tokenSymbols,
+            tokenIcons,
+            
+            // Protocol info from mappings
+            protocolIcon: protocolMapping.fallbackIcon,
+            protocolName: protocolMapping.name,
 
-            // Updated field names
-            protocolIcon: YIELD_SOURCE_MAPPINGS[sourceName].fallbackIcon,
-            protocolName: YIELD_SOURCE_MAPPINGS[sourceName].name,
-            tokenIcons: data?.tokenIcons,
-
-            type: source.type,
+            type: source.rawData.type,
             currentApy: source.rawData.currentApy.toString(),
-            tvl: source.rawTvl.toString(),
+            tvl: source.rawData.tvl.toString(),
             lastUpdated: now,
             raw: source.rawData.raw,
             yieldSubSources: source.rawData.yieldSubSources,
@@ -89,11 +92,11 @@ export async function updateYieldSourcesBatch<P extends Protocols>(
         { upsert: true, new: true }
       );
 
-      // ✅ Unified historical yield tracking
+      // ✅ Historical yield tracking
       await HistoricalYieldModel.create({
         yieldSourceId: source.id,
         apy: source.rawData.currentApy.toString(),
-        tvl: source.rawTvl,
+        tvl: source.rawData.tvl,
         timestamp: now,
       });
 
@@ -101,13 +104,26 @@ export async function updateYieldSourcesBatch<P extends Protocols>(
       updates++;
     } catch (err) {
       errors++;
-      console.error(
-        `[FAIL] Could not update ${sourceName} source ${source.id}:`,
-        err
-      );
+      console.error(`[FAIL] Could not update ${sourceName} source ${source.id}:`, err);
     }
   }
 
   console.log(`[SUCCESS] ${sourceName}: ${updates} updated, ${errors} errors`);
   return { updates, errors, updatedIds };
+}
+
+// ✅ Simple helper for type-based descriptions
+function getDescriptionByType(type: YieldSourceType): string {
+  switch (type) {
+    case YieldSourceType.SHAPE_LIQUIDITY:
+    case YieldSourceType.INSTANT_UNSTAKE:
+    case YieldSourceType.LSU_POOL:
+      return 'Liquid Staking';
+    case YieldSourceType.VALIDATOR:
+      return 'Direct XRD Staking';
+    case YieldSourceType.DEX_PAIR:
+      return 'DEX Liquidity Pool';
+    default:
+      return 'DeFi Yield Source';
+  }
 }

@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { YieldSourceDisplayData } from '$shared/typings/Api';
-  import { Protocols, YieldSourceType } from '$shared/typings/YieldSource';
+  import { Dapps, YieldSourceType } from '$shared/typings/YieldSource';
   
   // Import the fallback components
   import LSUPoolDetails from './LSUPoolDetails.svelte';
@@ -27,7 +27,7 @@
 
 <div class="yield-source-expanded">
   {#if yieldSource.type === YieldSourceType.DEX_PAIR}
-    {#if yieldSource.protocolMetadata?.protocol === Protocols.CAVIARNINE}
+    {#if yieldSource.protocolMetadata?.protocol === Dapps.CAVIARNINE}
       {#await import('./Dex/CaviarNineDexDetails.svelte') then module}
         <svelte:component this={module.default} {yieldSource} />
       {/await}

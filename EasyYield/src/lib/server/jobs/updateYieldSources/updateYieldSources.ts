@@ -18,14 +18,14 @@ export async function updateYieldSourcesJob() {
     let allUpdatedIds: string[] = [];
 
     // ✅ OPTION 1: Process separately (current approach)
-    const ociswapResult = await updateOciswapYieldSources();
+    // const ociswapResult = await updateOciswapYieldSources();
     const caviarNineResult = await updateCaviarNineYieldSources();
 
     // Aggregate results (Option 1)
-    totalUpdates = ociswapResult.updates + caviarNineResult.updates;
-    totalErrors = ociswapResult.errors + caviarNineResult.errors;
+    totalUpdates = caviarNineResult.updates;
+    totalErrors =  caviarNineResult.errors;
     allUpdatedIds = [
-      ...ociswapResult.updatedIds,
+      // ...ociswapResult.updatedIds,
       ...caviarNineResult.updatedIds,
     ];
 

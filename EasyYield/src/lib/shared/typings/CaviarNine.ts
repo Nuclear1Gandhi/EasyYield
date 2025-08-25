@@ -15,6 +15,30 @@ export type CaviarNinePoolResponse = {
   data?: any[];
 };
 
+
+export interface RawCaviarNineHyperstakePool {
+  // Core identification
+  poolId: string;
+  poolType: 'TICKER' | 'LSU_POOL' | 'HYPERSTAKE';
+  
+  // Token data for TVL calculation
+  tokens: Array<{
+    address: string;
+    symbol: string | null;
+    amount: string; // Raw amount with decimals
+    decimals: number;
+  }>;
+  
+  // Pool metadata
+  name: string;
+  hasVault: boolean;
+  vaultAddress?: string;
+  swapFee?: string;
+  
+  // Raw API data for later processing
+  rawApiData: any;
+}
+
 export type CaviarNineTicker = {
   ticker_id: string;
   base_currency: string;

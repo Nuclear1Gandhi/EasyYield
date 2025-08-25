@@ -29,21 +29,12 @@
       render: (row: YieldSourceDisplayData) => `<span>${formatLargeNumber(row.tvl)}</span>`
     },
     {
-      key: 'change' as keyof YieldSourceDisplayData,
-      label: '7d Δ',
+      key: 'change24h' as keyof YieldSourceDisplayData,
+      label: '24h Δ',
       render: (row: YieldSourceDisplayData) => {
-        const cls = row.change?.startsWith('+') ? 'pos' : row.change?.startsWith('-') ? 'neg' : '';
-        return `<span class="${cls}">${row.change}%</span>`;
-      }
-    },
-    {
-      key: 'status' as keyof YieldSourceDisplayData,
-      label: 'Status',
-      render: (row: YieldSourceDisplayData) => {
-        const badge = row.status?.charAt(0).toUpperCase() + row.status?.slice(1);
-        const colorClass = row.status === 'growing' ? 'growing' : 
-                          row.status === 'stable' ? 'stable' : 'volatile';
-        return `<span class="status-badge ${colorClass}">${badge}</span>`;
+        const change = row.change24h ?? '0';
+        const cls = change.startsWith('+') ? 'pos' : change.startsWith('-') ? 'neg' : '';
+        return `<span class="${cls}">${change}%</span>`;
       }
     },
     {
@@ -59,7 +50,6 @@
     },
   ];
 
-  // Function to render the expanded row content
   function renderExpandedRow(yieldSource: YieldSourceDisplayData) {
     return {
       component: YieldSourceExpanded,
@@ -67,51 +57,35 @@
     };
   }
 
-  // Function to get unique ID for each row
   function getYieldSourceId(yieldSource: YieldSourceDisplayData): string {
     return yieldSource.id;
   }
 
-  // Function to style rows (optional)
   function getRowClass(item: YieldSourceDisplayData, index: number): string {
-    // Add any row-specific classes here
-    // return item.isComposite ? 'composite-row' : '';
-    return ''
+    return '';
   }
-// State for refresh loading
+
   let isRefreshing = $state(false);
   let refreshError = $state<string | null>(null);
 
   async function refreshYieldData() {
     isRefreshing = true;
     refreshError = null;
-    
     try {
       const response = await fetch('/api/v1/protected/yield-sources', {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         cache: 'no-cache'
       });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch yield sources: ${response.status} ${response.statusText}`);
-      }
-
+      if (!response.ok) throw new Error(`Failed to fetch yield sources: ${response.status}`);
       const freshData: YieldSourceDisplayData[] = await response.json();
       yieldSources = freshData;
-      
-      console.log(`Refreshed ${freshData.length} yield sources`);
-      
     } catch (error) {
-      console.error('Failed to refresh yield data:', error);
       refreshError = error instanceof Error ? error.message : 'Unknown error occurred';
     } finally {
       isRefreshing = false;
     }
   }
-
 </script>
 
 <PaginatedTable
@@ -126,7 +100,7 @@
   getRowId={getYieldSourceId}
   rowClass={getRowClass}
 >
-  {#snippet empty()}  
+  {#snippet empty()}
     <Empty 
       title="No Yield Opportunities Found"
       description=""
@@ -134,10 +108,9 @@
       onAction={refreshYieldData}
       icon="tabler:coin-off"
       loading={isRefreshing}
-    />  
+    />
   {/snippet}
 </PaginatedTable>
-
 
 {#if refreshError}
   <div class="refresh-error">
@@ -161,30 +134,13 @@
       background: rgba(34, 197, 94, 0.1);
       color: rgb(34, 197, 94);
     }
-    
     &.stable {
       background: rgba(59, 130, 246, 0.1);
       color: rgb(59, 130, 246);
     }
-    
     &.volatile {
       background: rgba(245, 158, 11, 0.1);
       color: rgb(245, 158, 11);
-    }
-  }
-
-  // Optional: Styling for composite rows
-  :global(.composite-row) {
-    position: relative;
-    
-    &::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 0;
-      bottom: 0;
-      width: 3px;
-      background: var(--blue-500);
     }
   }
 </style>

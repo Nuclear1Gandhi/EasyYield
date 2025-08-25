@@ -1,4 +1,4 @@
-import { RadixGatewayClient } from '$server/services/gatewayClient';
+import { RadixGatewayClient } from '$server/api/gateway/gatewayClient';
 
 interface DappInfo {
   name?: string;

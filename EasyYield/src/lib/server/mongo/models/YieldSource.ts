@@ -1,6 +1,6 @@
 import {
   Features,
-  Protocols,
+  Dapps,
   YieldSourceType,
   type YieldSourceDoc,
 } from '$shared/typings/YieldSource';
@@ -31,7 +31,7 @@ const YieldSubSourceSchema = new Schema({
 
 const RawPoolSchema = { type: Schema.Types.Mixed, required: true };
 
-const YieldSourceSchema = new Schema<YieldSourceDoc<Protocols.CAVIARNINE>>({
+const YieldSourceSchema = new Schema<YieldSourceDoc<Dapps.CAVIARNINE>>({
   yieldSourceId: { type: String, unique: true },
   name: { type: String },
   displayName: { type: String },
@@ -76,6 +76,6 @@ YieldSourceSchema.index({ hasVault: 1, type: 1 });
 YieldSourceSchema.index({ vaultCategory: 1, currentApy: -1 });
 YieldSourceSchema.index({ hasVault: 1, tvl: -1 });
 
-export const YieldSourceModel: Model<YieldSourceDoc<Protocols.CAVIARNINE>> =
+export const YieldSourceModel: Model<YieldSourceDoc<Dapps.CAVIARNINE>> =
   mongoose.models?.['YieldSource'] ??
   mongoose.model('YieldSource', YieldSourceSchema);

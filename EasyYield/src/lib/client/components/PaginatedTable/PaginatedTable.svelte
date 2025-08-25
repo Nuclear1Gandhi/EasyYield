@@ -258,7 +258,7 @@
       </td>
     </tr>
   {:else}
-    {#each displayedData as item, index (index)}
+    {#each displayedData as item, index (item.id)}
       <tr class={rowClass ? rowClass(item, index) : ''}>
         {#each columns as column}
           <td>

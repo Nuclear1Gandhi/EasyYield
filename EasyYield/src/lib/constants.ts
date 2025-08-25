@@ -1,4 +1,4 @@
-import { Protocols } from '$shared/typings/YieldSource';
+import { Dapps } from '$shared/typings/YieldSource';
 
 export const componentAddress =
   'component_tdx_2_1cz44jlxyv0wtu2cj7vrul0eh8jpcfv3ce6ptsnat5guwrdlhfpyydn';
@@ -20,20 +20,20 @@ export const CAVIARNINE_LSU_POOL_ADDRESS =
   'component_rdx1cppy08xgra5tv5melsjtj79c0ngvrlmzl8hhs7vwtzknp9xxs63mfp';
 
 export const YIELD_SOURCE_MAPPINGS = {
-  [Protocols.CAVIARNINE]: {
+  [Dapps.CAVIARNINE]: {
     name: 'CaviarNine',
     dappDefinitionAddress:
       'account_rdx12yrjl8m5a4cn9aap2ez2lmvw6g64zgyqnlj4gvugzstye4gnj6assc', // CaviarNine dApp definition
     fallbackIcon:
       'https://assets.caviarnine.com/icons/caviarnine_logo_light_400.png',
   },
-  [Protocols.OCISWAP]: {
+  [Dapps.OCISWAP]: {
     name: 'Ociswap',
     dappDefinitionAddress:
       'account_rdx12x2ecj3kp4mhq9u34xrdh7njzyz0ewcz4szv0jw5jksxxssnjh7z6z' as string, // Ociswap dApp definition
     fallbackIcon: 'https://ociswap.com/icons/oci.png',
   },
-  [Protocols.RADIX_STAKING]: {
+  [Dapps.RADIX_STAKING]: {
     name: 'Radix',
     dappDefinitionAddress: undefined, // Native staking
     fallbackIcon: '/no-image-circle-min.png',

@@ -7,7 +7,7 @@ export enum CaviarNinePoolType {
   'INDEX_POOL' = 'INDEX_POOL',
 }
 
-export enum Protocols {
+export enum Dapps {
   'CAVIARNINE' = 'CAVIARNINE',
   'OCISWAP' = 'OCISWAP',
   'RADIX_STAKING' = 'RADIX_STAKING',
@@ -24,7 +24,7 @@ export enum Features {
 }
 
 export type CaviarNineMetadata = {
-  protocol: Protocols.CAVIARNINE;
+  protocol: Dapps.CAVIARNINE;
   poolType: CaviarNinePoolType;
   hasVault: boolean;
   vaultAddress?: string;
@@ -33,14 +33,14 @@ export type CaviarNineMetadata = {
 };
 
 export type OciswapMetadata = {
-  protocol: Protocols.OCISWAP;
+  protocol: Dapps.OCISWAP;
   poolVersion: string;
   tickSpacing?: number;
   priceRange?: { min: string; max: string };
 };
 
 export type RadixStakingMetadata = {
-  protocol: Protocols.RADIX_STAKING;
+  protocol: Dapps.RADIX_STAKING;
   validatorAddress: string;
   validatorName: string;
   uptimePercentage: number;
@@ -48,10 +48,10 @@ export type RadixStakingMetadata = {
 };
 
 // Union type for protocol metadata
-export type ProtocolMetadata<P extends Protocols> =
-  P extends Protocols.CAVIARNINE
+export type ProtocolMetadata<P extends Dapps> =
+  P extends Dapps.CAVIARNINE
     ? CaviarNineMetadata
-    : P extends Protocols.OCISWAP
+    : P extends Dapps.OCISWAP
       ? OciswapMetadata
       : RadixStakingMetadata;
 
@@ -59,6 +59,7 @@ export enum YieldSourceType {
   LSU_POOL = 'LSU_POOL',
   VALIDATOR = 'VALIDATOR',
   DEX_PAIR = 'DEX_PAIR',
+  HYPERSTAKE = 'HYPERSTAKE',
   SHAPE_LIQUIDITY = 'SHAPE_LIQUIDITY', // AMM pools with concentrated liquidity
   INSTANT_UNSTAKE = 'INSTANT_UNSTAKE', // Arbitrage premium opportunity
 }
@@ -88,7 +89,7 @@ export type YieldSourceMetrics = {
   lastComputed: Date;
 };
 
-export type YieldSourceDocRaw<P extends Protocols, R = any> = {
+export type YieldSourceDocRaw<P extends Dapps, R = any> = {
   yieldSourceId: string;
   name: string;
   displayName?: string;
@@ -112,10 +113,9 @@ export type YieldSourceDocRaw<P extends Protocols, R = any> = {
 
   // Protocol-specific metadata (discriminated union)
   protocolMetadata: ProtocolMetadata<P>;
-
   // Raw data storage
   raw: R;
 };
 
-export type YieldSourceDoc<P extends Protocols, R = any> = Document &
+export type YieldSourceDoc<P extends Dapps, R = any> = Document &
   YieldSourceDocRaw<P, R>;

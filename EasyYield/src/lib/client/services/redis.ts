@@ -1,0 +1,13 @@
+import Redis from 'ioredis';
+
+const redis = new Redis(process.env.REDIS_URL, {
+  // Optional tuning
+  maxRetriesPerRequest: null,
+  enableReadyCheck: false,
+});
+
+redis.on('error', (err) => {
+  console.error('Redis error:', err);
+});
+
+export default redis;

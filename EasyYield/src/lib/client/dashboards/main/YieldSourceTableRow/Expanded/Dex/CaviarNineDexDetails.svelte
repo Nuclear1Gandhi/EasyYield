@@ -55,7 +55,7 @@
         <Badge color="green" size="small">Active</Badge>
       </div>
       <div class="feature-item">
-        <Icon icon="tabler:shield-check" width="16" />
+        <Icon icon="tabler:shield-chjeck" width="16" />
         <span>MEV protection</span>
         <Badge color="blue" size="small">Enabled</Badge>
       </div>

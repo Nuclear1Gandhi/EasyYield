@@ -2,14 +2,14 @@ import type {
   YieldSourceType,
   YieldSubSource,
   Features,
-  Protocols,
+  Dapps,
   ProtocolMetadata,
 } from './YieldSource';
 
 export interface YieldSourceResponse {
   yieldSourceId: string;
   name: string;
-  type: Protocols; // Updated to use Protocols enum instead of strings
+  type: Dapps; // Updated to use Protocols enum instead of strings
   currentApy: string; // BigNumber string
   tvl: string; // BigNumber string
   lastUpdated: string;
@@ -50,7 +50,7 @@ export type YieldSourceDisplayData<R = any> = {
 
   // New unified features
   features?: Features[];
-  protocolMetadata?: ProtocolMetadata<Protocols>; // Type-safe protocol metadata
+  protocolMetadata?: ProtocolMetadata<Dapps>; // Type-safe protocol metadata
 
   // Legacy fields (for backward compatibility during transition)
   hasVault?: boolean;
@@ -63,22 +63,22 @@ export type YieldSourceDisplayData<R = any> = {
 // Helper type for protocol-specific display data
 export type CaviarNineDisplayData = YieldSourceDisplayData & {
   protocolMetadata: Extract<
-    ProtocolMetadata<Protocols>,
-    { protocol: Protocols.CAVIARNINE }
+    ProtocolMetadata<Dapps>,
+    { protocol: Dapps.CAVIARNINE }
   >;
 };
 
 export type OciswapDisplayData = YieldSourceDisplayData & {
   protocolMetadata: Extract<
-    ProtocolMetadata<Protocols>,
-    { protocol: Protocols.OCISWAP }
+    ProtocolMetadata<Dapps>,
+    { protocol: Dapps.OCISWAP }
   >;
 };
 
 export type RadixStakingDisplayData = YieldSourceDisplayData & {
   protocolMetadata: Extract<
-    ProtocolMetadata<Protocols>,
-    { protocol: Protocols.RADIX_STAKING }
+    ProtocolMetadata<Dapps>,
+    { protocol: Dapps.RADIX_STAKING }
   >;
 };
 
@@ -95,7 +95,7 @@ export interface YieldSourcePosition {
   amount: string;
   value: string;
   apy: string;
-  protocol?: Protocols; // Added for better categorization
+  protocol?: Dapps; // Added for better categorization
   features?: Features[]; // Show what features this position has
 }
 
@@ -107,7 +107,7 @@ export interface YieldSourceHistoricalData {
 
 // New enhanced filter types
 export interface YieldSourceFilters {
-  protocols?: Protocols[];
+  protocols?: Dapps[];
   features?: Features[];
   minApy?: number;
   maxRisk?: 'low' | 'medium' | 'high';

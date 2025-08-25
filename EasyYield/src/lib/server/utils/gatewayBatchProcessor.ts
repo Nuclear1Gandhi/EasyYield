@@ -1,4 +1,4 @@
-import { RadixGatewayClient } from '$server/services/gatewayClient';
+import { RadixGatewayClient } from '$server/api/gateway/gatewayClient';
 import { generateFallbackName } from '$shared/utils/dataTransform';
 import type { BatchProcessor } from './batchProcessor';
 

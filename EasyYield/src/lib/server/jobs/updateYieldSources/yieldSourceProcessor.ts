@@ -4,7 +4,7 @@ import {
   cleanYieldSourceNameWithCache,
   extractTokenSymbols,
 } from '$server/utils/yieldSourceNameCleaner';
-import type { Protocols, YieldSourceType } from '$shared/typings/YieldSource';
+import type { Dapps, YieldSourceType } from '$shared/typings/YieldSource';
 import { extractResourceAddresses } from '$shared/utils/dataTransform';
 
 interface YieldSourceProcessingResult {
@@ -21,7 +21,7 @@ export async function batchProcessYieldSources(
     id: string;
     originalName: string;
     yieldSourceType: YieldSourceType;
-    yieldSourceName: Protocols;
+    yieldSourceName: Dapps;
   }>
 ): Promise<Map<string, YieldSourceProcessingResult>> {
   // Step 1: Pre-fetch resource names

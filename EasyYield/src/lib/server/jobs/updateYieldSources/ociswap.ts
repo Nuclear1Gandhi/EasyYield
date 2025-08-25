@@ -5,7 +5,7 @@ import { YieldSourceModel } from '$server/mongo/models/YieldSource';
 import { cleanYieldSourceNameWithCache } from '$server/utils/yieldSourceNameCleaner';
 import { type OciswapPool } from '$shared/typings/Ociswap';
 import {
-  Protocols,
+  Dapps,
   YieldSourceType,
   type OciswapMetadata,
   type YieldSubSource,
@@ -68,7 +68,7 @@ export async function updateOciswapYieldSources(): Promise<{
 
       // Build protocol metadata using correct field types
       const protocolMetadata: OciswapMetadata = {
-        protocol: Protocols.OCISWAP,
+        protocol: Dapps.OCISWAP,
         poolVersion: pool.version,
         tickSpacing:
           pool.pool_type === 'concentrated_liquidity' ? 60 : undefined,
@@ -132,8 +132,8 @@ export async function updateOciswapYieldSources(): Promise<{
 
             
             // Protocol and type info
-            protocolIcon: YIELD_SOURCE_MAPPINGS[Protocols.OCISWAP].fallbackIcon,
-            protocolName: YIELD_SOURCE_MAPPINGS[Protocols.OCISWAP].name,
+            protocolIcon: YIELD_SOURCE_MAPPINGS[Dapps.OCISWAP].fallbackIcon,
+            protocolName: YIELD_SOURCE_MAPPINGS[Dapps.OCISWAP].name,
             type: YieldSourceType.DEX_PAIR,
 
             // Financial metrics with correct formatting

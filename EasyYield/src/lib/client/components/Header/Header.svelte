@@ -4,7 +4,7 @@
   import { useRadixAuth } from '$client/hooks/useRadixAuth';
   import type { YieldSourceDisplayData } from '$shared/typings/Api';
   import MainSearch from './MainSearch.svelte';
-  import { Protocols } from '$shared/typings/YieldSource';
+  import { Dapps } from '$shared/typings/YieldSource';
   import Filters, { type FilterOptions } from './Filters.svelte';
 
   type Props =  {};
@@ -38,11 +38,11 @@
     let externalUrl: string | null = null;
     
     switch (result.protocolMetadata?.protocol) {
-      case Protocols.CAVIARNINE:
+      case Dapps.CAVIARNINE:
         externalUrl = `https://app.caviarnine.com/pool/${result.id}`;
         break;
         
-      case Protocols.OCISWAP:
+      case Dapps.OCISWAP:
         externalUrl = `https://ociswap.com/pools/${result.id}`;
         break;
         

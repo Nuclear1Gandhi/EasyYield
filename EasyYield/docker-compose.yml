@@ -1,16 +1,27 @@
+version: '3.8'
 services:
   mongodb:
     image: mongo
     container_name: easyyield-mongo
     restart: unless-stopped
     ports:
-      - '27017:27017' # Expose default MongoDB port
+      - '27017:27017'
     environment:
       MONGO_INITDB_ROOT_USERNAME: easyyield_admin
       MONGO_INITDB_ROOT_PASSWORD: supersecretpassword
       MONGO_INITDB_DATABASE: easyyield_db
     volumes:
-      - mongo_data:/data/db # Persist data across container restarts
+      - mongo_data:/data/db
+    networks:
+      - easyyield-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: easyyield-redis
+    restart: unless-stopped
+    ports:
+      - '6379:6379'
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
     networks:
       - easyyield-net
 
