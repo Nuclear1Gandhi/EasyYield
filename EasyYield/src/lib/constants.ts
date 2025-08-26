@@ -19,7 +19,7 @@ export const HYPERSTAKE_LP_RESOURCE =
 export const CAVIARNINE_LSU_POOL_ADDRESS =
   'component_rdx1cppy08xgra5tv5melsjtj79c0ngvrlmzl8hhs7vwtzknp9xxs63mfp';
 
-export const YIELD_SOURCE_MAPPINGS = {
+export const DAPP_MAPPINGS = {
   [Dapps.CAVIARNINE]: {
     name: 'CaviarNine',
     dappDefinitionAddress:
@@ -39,3 +39,7 @@ export const YIELD_SOURCE_MAPPINGS = {
     fallbackIcon: '/no-image-circle-min.png',
   },
 } as const;
+
+export const DAYS_PER_YEAR = 365;
+
+export const CAVIARNINE_TRADING_FEE = 0.03;

@@ -2,10 +2,10 @@ import { HistoricalYieldModel } from '$server/mongo/models/HistoricalYieldDoc';
 import { YieldSourceMetricsModel } from '$server/mongo/models/YieldSourceMetrics';
 import { computeYieldSourceMetrics } from '$shared/utils/yieldSourceMetrics/metricsCalculator';
 
-export async function computeAndUpsertMetrics(yieldSourceId: string) {
+export async function computeAndUpsertMetrics(yieldSourceAddress: string) {
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
   const history = await HistoricalYieldModel.find({
-    yieldSourceId,
+    yieldSourceAddress,
     timestamp: { $gte: sevenDaysAgo },
   });
 
@@ -13,7 +13,7 @@ export async function computeAndUpsertMetrics(yieldSourceId: string) {
   if (!computed) return;
 
   await YieldSourceMetricsModel.updateOne(
-    { yieldSourceId },
+    { yieldSourceAddress },
     {
       $set: {
         ...computed,

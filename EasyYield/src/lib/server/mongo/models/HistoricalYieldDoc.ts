@@ -3,7 +3,7 @@ import mongoose, { Schema, Model } from 'mongoose';
 
 // Mongoose schema
 const HistoricalYieldSchema = new Schema<HistoricalYieldDoc>({
-  yieldSourceId: { type: String, index: true },
+  yieldSourceAddress: { type: String, index: true },
   apy: { type: String },
   tvl: { type: String },
   timestamp: { type: Date, default: Date.now },

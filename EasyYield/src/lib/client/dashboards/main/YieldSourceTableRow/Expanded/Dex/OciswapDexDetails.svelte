@@ -45,22 +45,22 @@
       <div class="feature-item">
         <Icon icon="tabler:rocket" width="16" />
         <span>Flash swaps</span>
-        <Badge color="green" size="sm">Available</Badge>
+        <Badge color="green" size="small">Available</Badge>
       </div>
       <div class="feature-item">
         <Icon icon="tabler:shield" width="16" />
         <span>Slippage protection</span>
-        <Badge color="blue" size="sm">Enabled</Badge>
+        <Badge color="blue" size="small">Enabled</Badge>
       </div>
       <div class="feature-item">
         <Icon icon="tabler:zap" width="16" />
         <span>Instant swaps</span>
-        <Badge color="purple" size="sm">Standard</Badge>
+        <Badge color="purple" size="small">Standard</Badge>
       </div>
       <div class="feature-item">
         <Icon icon="tabler:arrows-exchange" width="16" />
         <span>Multi-hop routing</span>
-        <Badge color="indigo" size="sm">Optimized</Badge>
+        <Badge color="indigo" size="small">Optimized</Badge>
       </div>
     </div>
   </DetailSection>
@@ -142,7 +142,7 @@
               <Icon icon="tabler:coin" width="16" />
               <span class="yield-type">{subSource.type.replace('_', ' ')}</span>
               <span class="yield-apy">{subSource.apy}%</span>
-              <Badge color={subSource.isActive ? 'green' : 'gray'} size="sm">
+              <Badge color={subSource.isActive ? 'green' : 'gray'} size="small">
                 {subSource.isActive ? 'Active' : 'Inactive'}
               </Badge>
             </div>

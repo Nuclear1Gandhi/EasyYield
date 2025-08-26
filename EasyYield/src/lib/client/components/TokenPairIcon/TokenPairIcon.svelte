@@ -1,11 +1,12 @@
 <script lang="ts">
+  import type { PoolInfoFungibleResource } from "$shared/typings/CaviarNine";
+
   interface Props {
-    tokenIcons: string[];
-    tokenSymbols: string[];
+    tokens: PoolInfoFungibleResource[];
     size?: 'sm' | 'md' | 'lg';
   }
   
-  let { tokenIcons, tokenSymbols, size = 'md' }: Props = $props();
+  let { tokens, size = 'md' }: Props = $props();
   
   const sizeClasses = {
     sm: 'token-icon-sm',
@@ -14,25 +15,26 @@
   };
   
   const maxVisible = 3; // Show max 3 tokens
-  const visibleIcons = tokenIcons.slice(0, maxVisible);
-  const hasMore = tokenIcons.length > maxVisible;
+  const visibileTokens = tokens.slice(0, maxVisible);
+  const hasMore = tokens.length > maxVisible;
+  console.log(visibileTokens)
 </script>
 
 <div class="token-pair-icon {sizeClasses[size]}">
-  {#each visibleIcons as iconUrl, index}
-    <div class="token-icon" style="z-index: {visibleIcons.length - index}">
-      {#if iconUrl}
+  {#each visibileTokens as token, index}
+    <div class="token-icon" style="z-index: {visibileTokens.length - index}">
+      {#if token}
         <img 
-          src={iconUrl} 
-          alt={tokenSymbols[index] || 'Token'} 
+          src={token.iconUrl} 
+          alt={'token image'} 
           onerror={function() {
-            console.error('Error loading image', iconUrl)
+            console.error('Error loading image', token)
             this.src = '/no-image-circle-min.png'
           }}
         />
       {:else}
         <div class="token-placeholder">
-          {tokenSymbols[index]?.charAt(0) || '?'}
+          {tokens[index].iconUrl?.charAt(0) || '?'}
         </div>
       {/if}
     </div>
@@ -40,7 +42,7 @@
   
   {#if hasMore}
     <div class="token-more">
-      +{tokenIcons.length - maxVisible}
+      +{tokens.length - maxVisible}
     </div>
   {/if}
 </div>

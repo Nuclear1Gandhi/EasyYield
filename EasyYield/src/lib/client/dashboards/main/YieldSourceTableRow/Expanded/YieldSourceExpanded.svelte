@@ -27,7 +27,7 @@
 
 <div class="yield-source-expanded">
   {#if yieldSource.type === YieldSourceType.DEX_PAIR}
-    {#if yieldSource.protocolMetadata?.protocol === Dapps.CAVIARNINE}
+    {#if yieldSource.dapp === Dapps.CAVIARNINE}
       {#await import('./Dex/CaviarNineDexDetails.svelte') then module}
         <svelte:component this={module.default} {yieldSource} />
       {/await}

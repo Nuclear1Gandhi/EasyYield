@@ -16,39 +16,51 @@ const YieldSubSourceSchema = new Schema({
       'arbitrage_premium',
       'protocol_fees',
     ],
-    required: true,
   },
-  apy: { type: String, required: true },
+  apy: { type: String },
+  fee: { type: String },
   risk: {
     type: String,
     enum: ['low', 'medium', 'high', 'variable'],
-    required: true,
   },
-  description: { type: String, required: true },
-  isActive: { type: Boolean, required: true },
-  lastUpdated: { type: Date, required: true },
+  description: { type: String },
+  isActive: { type: Boolean },
+  lastUpdated: { type: Date },
 });
 
-const RawPoolSchema = { type: Schema.Types.Mixed, required: true };
+const PoolInfoFungibleResourceSchema = new Schema({
+  resourceAddress: { type: String },
+  amount: { type: String }, // keep as string for precision
+  vaultAddress: { type: String },
+
+  // TokenMetadata fields (example subset, adjust as per actual TokenMetadata)
+  symbol: { type: String, trim: true },
+  name: { type: String },
+  description: { type: String },
+  iconUrl: { type: String },
+  decimals: { type: Number },
+  // Additional enriched field
+  price: { type: Number },
+});
+
+const RawPoolSchema = { type: Schema.Types.Mixed };
 
 const YieldSourceSchema = new Schema<YieldSourceDoc<Dapps.CAVIARNINE>>({
-  yieldSourceId: { type: String, unique: true },
+  yieldSourceAddress: { type: String, unique: true },
   name: { type: String },
-  displayName: { type: String },
   type: {
     type: String,
     enum: Object.values(YieldSourceType),
   },
-  currentApy: { type: String },
+  apy: { type: String },
   tvl: { type: String },
   lastUpdated: { type: Date },
-
   // Updated field names
-  protocolIcon: { type: String },
-  protocolName: { type: String },
-  tokenIcons: [{ type: String }],
-  tokenSymbols: [{ type: String }],
+  dappIcon: { type: String },
+  dapp: { type: String },
+  tokens: [PoolInfoFungibleResourceSchema],
 
+  volume24h: { type: String },
   // Unified yield structure
   isComposite: { type: Boolean, default: false },
   yieldSubSources: [YieldSubSourceSchema],
@@ -57,15 +69,8 @@ const YieldSourceSchema = new Schema<YieldSourceDoc<Dapps.CAVIARNINE>>({
   features: [
     {
       type: String,
-      enum: Object.values(Features),
     },
   ],
-
-  // Protocol-specific metadata (Mixed type for flexibility)
-  protocolMetadata: {
-    type: Schema.Types.Mixed,
-    required: true,
-  },
 
   // Raw data storage
   raw: RawPoolSchema,

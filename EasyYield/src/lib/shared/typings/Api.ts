@@ -1,13 +1,15 @@
+import type { PoolInfoFungibleResource } from './CaviarNine';
 import type {
   YieldSourceType,
   YieldSubSource,
   Features,
   Dapps,
   ProtocolMetadata,
+  YieldSourceDocRaw,
 } from './YieldSource';
 
 export interface YieldSourceResponse {
-  yieldSourceId: string;
+  yieldSourceAddress: string;
   name: string;
   type: Dapps; // Updated to use Protocols enum instead of strings
   currentApy: string; // BigNumber string
@@ -18,69 +20,38 @@ export interface YieldSourceResponse {
   tvlChange7d: string | null;
 }
 
-export type YieldSourceDisplayData<R = any> = {
-  id: string;
-  name: string;
-  displayName?: string;
-  type: YieldSourceType;
-  currentApy: string;
-  tvl: string;
-  lastUpdated: string;
-
-  // Updated field names to match schema
-  protocolIcon?: string; // was dappIcon
-  protocolName?: string; // was dappName
-  tokenIcons: string[];
-  tokenSymbols: string[];
-
-  // Metrics (from YieldSourceMetrics join)
-  apy7dAvg?: string | null;
-  apyStd7d?: string | null;
-  tvlChange7d?: string | null;
-
-  // Computed frontend fields
-  apy: string; // formatted currentApy
-  change: string; // formatted tvlChange7d
-  status: 'growing' | 'stable' | 'volatile';
-  volatility?: number;
-
-  // Updated unified structure
-  isComposite?: boolean;
-  yieldSubSources?: YieldSubSource[];
-
-  // New unified features
-  features?: Features[];
-  protocolMetadata?: ProtocolMetadata<Dapps>; // Type-safe protocol metadata
-
-  // Legacy fields (for backward compatibility during transition)
-  hasVault?: boolean;
-  vaultCategory?: 'BASIC_DEX' | 'PREMIUM_VAULT';
-  riskProfile?: 'low' | 'medium' | 'high' | 'mixed'; // Aggregate risk
-
-  raw: R;
-};
+export type YieldSourceDisplayData<D extends Dapps = any> =
+  YieldSourceDocRaw<D> & {
+    fee: string;
+    resourceRatio: string;
+    // Metrics (from YieldSourceMetrics join)
+    apy7dAvg?: string | null;
+    apyStd7d?: string | null;
+    tvlChange7d?: string | null;
+  };
 
 // Helper type for protocol-specific display data
-export type CaviarNineDisplayData = YieldSourceDisplayData & {
+export type CaviarNineDisplayData = YieldSourceDisplayData<Dapps.CAVIARNINE> & {
   protocolMetadata: Extract<
     ProtocolMetadata<Dapps>,
     { protocol: Dapps.CAVIARNINE }
   >;
 };
 
-export type OciswapDisplayData = YieldSourceDisplayData & {
+export type OciswapDisplayData = YieldSourceDisplayData<Dapps.OCISWAP> & {
   protocolMetadata: Extract<
     ProtocolMetadata<Dapps>,
     { protocol: Dapps.OCISWAP }
   >;
 };
 
-export type RadixStakingDisplayData = YieldSourceDisplayData & {
-  protocolMetadata: Extract<
-    ProtocolMetadata<Dapps>,
-    { protocol: Dapps.RADIX_STAKING }
-  >;
-};
+export type RadixStakingDisplayData =
+  YieldSourceDisplayData<Dapps.RADIX_STAKING> & {
+    protocolMetadata: Extract<
+      ProtocolMetadata<Dapps>,
+      { protocol: Dapps.RADIX_STAKING }
+    >;
+  };
 
 // Portfolio data (unchanged but could be enhanced)
 export interface YieldSourceData {

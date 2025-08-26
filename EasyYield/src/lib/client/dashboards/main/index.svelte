@@ -34,7 +34,7 @@
   function getAverageApy(): string {
     if (dashboardData.yieldSources.length === 0) return '0.00';
     const total = dashboardData.yieldSources.reduce((sum, yieldSource) => {
-      return sum + parseFloat(yieldSource.currentApy || '0');
+      return sum + parseFloat(yieldSource.apy || '0');
     }, 0);
     return (total / dashboardData.yieldSources.length).toFixed(2);
   }
@@ -43,9 +43,9 @@
   function getBestYieldWithApy(): string {
     if (dashboardData.yieldSources.length === 0) return '--';
     const best = dashboardData.yieldSources.reduce((prev, current) => {
-      return parseFloat(current.currentApy) > parseFloat(prev.currentApy) ? current : prev;
+      return parseFloat(current.apy) > parseFloat(prev.apy) ? current : prev;
     });
-    return `${best.name.slice(0, 15)} (${parseFloat(best.currentApy).toFixed(1)}%)`;
+    return `${best.name.slice(0, 15)} (${parseFloat(best.apy).toFixed(1)}%)`;
   }
 
   // Summarize yield movement with simple up/down counts
@@ -57,8 +57,8 @@
     let downCount = 0;
 
     dashboardData.yieldSources.forEach(source => {
-      const current = parseFloat(source.currentApy);
-      const avg7d = source.metrics?.apy7dAvg ? parseFloat(source.metrics.apy7dAvg) : current;
+      const current = parseFloat(source.apy);
+      const avg7d = source.apy ? parseFloat(source.apy7dAvg ?? '0') : current;
       if (current > avg7d) upCount++;
       else if (current < avg7d) downCount++;
     });

@@ -1,3 +1,5 @@
+import type { TokenMetadata } from '$server/services/tokenCache';
+
 export interface CaviarNinePool {
   address: string;
   name: string;
@@ -15,12 +17,11 @@ export type CaviarNinePoolResponse = {
   data?: any[];
 };
 
-
 export interface RawCaviarNineHyperstakePool {
   // Core identification
   poolId: string;
   poolType: 'TICKER' | 'LSU_POOL' | 'HYPERSTAKE';
-  
+
   // Token data for TVL calculation
   tokens: Array<{
     address: string;
@@ -28,13 +29,13 @@ export interface RawCaviarNineHyperstakePool {
     amount: string; // Raw amount with decimals
     decimals: number;
   }>;
-  
+
   // Pool metadata
   name: string;
   hasVault: boolean;
   vaultAddress?: string;
   swapFee?: string;
-  
+
   // Raw API data for later processing
   rawApiData: any;
 }
@@ -240,4 +241,108 @@ export type CaviarNineLSUPoolResponse = {
   limit?: number;
   total_tvl?: string;
   average_apy?: number;
+};
+
+// new ---
+
+export type ExtractedPoolMetadata = {
+  token_x: string;
+  token_y: string;
+  liquidity_receipt: string;
+  name: string;
+  description: string;
+  tags: string[];
+};
+
+export type ExtractedPoolFungibleResource = {
+  resourceAddress: string;
+  amount: string; // keep string for precision
+  vaultAddress: string | null;
+};
+
+export type BaseExtractedPoolInfo = {
+  address: string;
+  fungibleResources: ExtractedPoolFungibleResource[];
+  metadata: ExtractedPoolMetadata;
+  state: {
+    bin_span?: number;
+    tick_index_current?: number | null;
+    lower_limit?: string; // decimals as strings
+    upper_limit?: string;
+    active_x?: string;
+    active_y?: string;
+    active_total_claim?: string;
+    liquidity_receipt_manager?: string;
+    tokens_x?: string;
+    tokens_y?: string;
+  };
+  roles: {
+    owner: any | null;
+    entries: any[];
+  };
+};
+
+export type PoolInfoFungibleResource = ExtractedPoolFungibleResource &
+  TokenMetadata & { price: number };
+
+export type PoolInfo = Omit<BaseExtractedPoolInfo, 'fungibleResources'> & {
+  fungibleResources: PoolInfoFungibleResource[];
+};
+
+// Shape liquidity
+interface ChartDataArrays {
+  high: string[];
+  low: string[];
+  open: string[];
+  close: string[];
+}
+
+export type CaviarNineShapeLiquidityResponseStrict = {
+  last_updated: string;
+  component_address: string;
+  liquidity_receipt_address: string;
+  token_x_address: string;
+  token_y_address: string;
+  token_x_name: string;
+  token_x_symbol: string;
+  token_y_name: string;
+  token_y_symbol: string;
+  bin_size: number;
+  status: string;
+  amounts: {
+    token_x: string;
+    token_x_in_xrd_attos: number;
+    token_y: string;
+    token_y_in_xrd_attos: number;
+    tvl_in_xrd_attos: number;
+  };
+  price: string;
+  price_token_x_to_xrd: string;
+  price_token_y_to_xrd: string;
+  decimals: {
+    token_x: number;
+    token_y: number;
+    price: number;
+  };
+  volume: {
+    all_in_xrd_attos: number;
+    '24h_in_xrd_attos': number;
+    '7d_in_xrd_attos': number;
+  };
+  bin_width_perc: string;
+  active_tick: string;
+  active_tick_xy_ratio: string;
+  fees_perc: string;
+  apy_perc: string;
+  chart_data: {
+    time: {
+      time_interval: string[];
+      unix_time_interval: number[];
+    };
+    tvl_in_xrd_attos: ChartDataArrays;
+    price: ChartDataArrays;
+    volume_in_xrd_attos: ChartDataArrays;
+    apy: ChartDataArrays;
+  };
+  bin_amounts_in_xrd_attos: Record<string, number>;
 };

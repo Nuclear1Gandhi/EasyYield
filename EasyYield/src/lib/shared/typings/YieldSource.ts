@@ -1,4 +1,5 @@
 import type { Document } from 'mongoose';
+import type { PoolInfoFungibleResource } from './CaviarNine';
 
 export enum CaviarNinePoolType {
   'SIMPLE_POOL' = 'SIMPLE_POOL',
@@ -48,12 +49,11 @@ export type RadixStakingMetadata = {
 };
 
 // Union type for protocol metadata
-export type ProtocolMetadata<P extends Dapps> =
-  P extends Dapps.CAVIARNINE
-    ? CaviarNineMetadata
-    : P extends Dapps.OCISWAP
-      ? OciswapMetadata
-      : RadixStakingMetadata;
+export type ProtocolMetadata<P extends Dapps> = P extends Dapps.CAVIARNINE
+  ? CaviarNineMetadata
+  : P extends Dapps.OCISWAP
+    ? OciswapMetadata
+    : RadixStakingMetadata;
 
 export enum YieldSourceType {
   LSU_POOL = 'LSU_POOL',
@@ -74,6 +74,7 @@ export type YieldSubSource = {
     | 'protocol_revenue_sharing'; // Add missing type
   apy: string;
   risk: 'low' | 'medium' | 'high' | 'variable';
+  fee: string;
   description: string;
   isActive: boolean;
   lastUpdated: Date;
@@ -90,26 +91,26 @@ export type YieldSourceMetrics = {
 };
 
 export type YieldSourceDocRaw<P extends Dapps, R = any> = {
-  yieldSourceId: string;
+  yieldSourceAddress: string;
   name: string;
-  displayName?: string;
   type: YieldSourceType;
-  currentApy: string;
+  apy: string;
   tvl: string;
   lastUpdated: Date;
 
   // Standard metadata
-  protocolIcon: string;
-  protocolName: string;
-  tokenIcons: string[];
-  tokenSymbols: string[];
+  dapp: Dapps;
+  dappIcon: string;
+  tokens: PoolInfoFungibleResource[];
+
+  volume24h: string;
 
   // Unified yield structure
   isComposite: boolean;
   yieldSubSources: YieldSubSource[];
 
   // Unified features (truly agnostic)
-  features: Array<Features>;
+  features: Array<string>;
 
   // Protocol-specific metadata (discriminated union)
   protocolMetadata: ProtocolMetadata<P>;

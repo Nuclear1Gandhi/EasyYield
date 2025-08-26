@@ -29,16 +29,16 @@
       render: (row: YieldSourceDisplayData) => `<span>${formatLargeNumber(row.tvl)}</span>`
     },
     {
-      key: 'change24h' as keyof YieldSourceDisplayData,
-      label: '24h Δ',
+      key: 'apyStd7d' as keyof YieldSourceDisplayData,
+      label: '7d Δ',
       render: (row: YieldSourceDisplayData) => {
-        const change = row.change24h ?? '0';
+        const change = row.apy7dAvg ?? '0';
         const cls = change.startsWith('+') ? 'pos' : change.startsWith('-') ? 'neg' : '';
         return `<span class="${cls}">${change}%</span>`;
       }
     },
     {
-      key: 'id' as keyof YieldSourceDisplayData,
+      key: 'yieldSourceAddress' as keyof YieldSourceDisplayData,
       label: '',
       sortable: false,
       render: (row: YieldSourceDisplayData) => ({
@@ -58,7 +58,7 @@
   }
 
   function getYieldSourceId(yieldSource: YieldSourceDisplayData): string {
-    return yieldSource.id;
+    return yieldSource.yieldSourceAddress;
   }
 
   function getRowClass(item: YieldSourceDisplayData, index: number): string {

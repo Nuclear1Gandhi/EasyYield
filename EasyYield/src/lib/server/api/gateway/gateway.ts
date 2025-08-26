@@ -53,46 +53,58 @@ export async function resolveTokenNames(
   return nameAndSymbol;
 }
 
-export async function fetchTokenMetadataSingle(address: string): Promise<TokenMetadata | null> {
+export async function fetchTokensMetadata(
+  addresses: string[]
+): Promise<TokenMetadata[]> {
   try {
     const gateway = RadixGatewayClient.getInstance();
-    const entity = await gateway.state.getEntityDetailsVaultAggregated(address, {
-      explicitMetadata: ['name', 'symbol', 'icon_url'],
+    const rawTokens = await gateway.state.getEntityDetailsVaultAggregated(
+      addresses,
+      {
+        explicitMetadata: ['name', 'symbol', 'icon_url'],
+      }
+    );
+
+    return rawTokens.map((e) => {
+      const metadata = e?.metadata?.items ?? [];
+      const metaMap = new Map<string, string>();
+      for (const m of metadata) {
+        const key = m?.key;
+        const val = m?.value?.typed?.value;
+        if (key && typeof val === 'string') metaMap.set(key, val);
+      }
+
+      const details = e?.details;
+      let decimals = 18;
+      if (
+        details?.type === 'FungibleResource' &&
+        typeof details.divisibility === 'number'
+      ) {
+        decimals = details.divisibility;
+      }
+
+      return {
+        address: e.address.toLowerCase(),
+        symbol: metaMap.get('symbol') || e.address,
+        name: metaMap.get('name') || `Token ${e.address}`,
+        iconUrl: metaMap.get('icon_url'),
+        decimals,
+      };
     });
-
-    const metadata = entity?.metadata?.items ?? [];
-    const metaMap = new Map<string, string>();
-    for (const m of metadata) {
-      const key = m?.key;
-      const val = m?.value?.typed?.value;
-      if (key && typeof val === 'string') metaMap.set(key, val);
-    }
-
-    const details = entity?.details;
-    let decimals = 18;
-    if (details?.type === 'FungibleResource' && typeof details.divisibility === 'number') {
-      decimals = details.divisibility;
-    }
-
-    return {
-      address: address.toLowerCase(),
-      symbol: metaMap.get('symbol') || address,
-      name: metaMap.get('name') || `Token ${address}`,
-      iconUrl: metaMap.get('icon_url'),
-      decimals,
-    };
   } catch {
-    return null;
+    return [];
   }
 }
 
-export async function fetchTokenMetadataMany(addresses: string[]): Promise<Record<string, TokenMetadata | null>> {
+export async function fetchTokenMetadataMany(
+  addresses: string[]
+): Promise<Record<string, TokenMetadata | null>> {
   // Simple concurrent fan-out with modest parallelism to respect rate limits
   const out: Record<string, TokenMetadata | null> = {};
   const batch = 8;
   for (let i = 0; i < addresses.length; i += batch) {
     const chunk = addresses.slice(i, i + batch);
-    const results = await Promise.all(chunk.map(a => fetchTokenMetadataSingle(a)));
+    const results = await fetchTokensMetadata(chunk);
     results.forEach((meta, idx) => {
       const key = chunk[idx].toLowerCase();
       out[key] = meta;

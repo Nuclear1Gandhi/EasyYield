@@ -1,4 +1,4 @@
-import { YIELD_SOURCE_MAPPINGS } from '$lib/constants';
+import { DAPP_MAPPINGS } from '$lib/constants';
 import { fetchTopOciswapPools } from '$server/api/ociswap/pools';
 import { HistoricalYieldModel } from '$server/mongo/models/HistoricalYieldDoc';
 import { YieldSourceModel } from '$server/mongo/models/YieldSource';
@@ -130,10 +130,9 @@ export async function updateOciswapYieldSources(): Promise<{
             tokenSymbols,
             tokenIcons,
 
-            
             // Protocol and type info
-            protocolIcon: YIELD_SOURCE_MAPPINGS[Dapps.OCISWAP].fallbackIcon,
-            protocolName: YIELD_SOURCE_MAPPINGS[Dapps.OCISWAP].name,
+            protocolIcon: DAPP_MAPPINGS[Dapps.OCISWAP].fallbackIcon,
+            protocolName: DAPP_MAPPINGS[Dapps.OCISWAP].name,
             type: YieldSourceType.DEX_PAIR,
 
             // Financial metrics with correct formatting

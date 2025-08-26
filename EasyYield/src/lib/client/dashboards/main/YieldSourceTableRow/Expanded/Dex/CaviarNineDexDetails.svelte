@@ -5,6 +5,8 @@
   import DetailSection from '../Common/DetailSection.svelte';
   import DetailGrid from '../Common/DetailGrid.svelte';
   import DetailItem from '../Common/DetailItem.svelte';
+  import { Dapps, YieldSourceType } from '$shared/typings/YieldSource';
+  import Ratio from '../Common/Ratio.svelte';
 
   type Props = {
     yieldSource: YieldSourceDisplayData;
@@ -15,85 +17,33 @@
   // Extract CaviarNine-specific data from raw
   let poolData = $derived(yieldSource.raw as any);
   let feeVaultData = $derived(poolData?.feeVaultData);
+
+  const onOpen = () => {
+    switch (yieldSource.dapp) {
+      case Dapps.CAVIARNINE: {
+        if (yieldSource.type === YieldSourceType.DEX_PAIR) {
+          window.open('', '_blank')
+        }
+      }
+      default:
+
+    }
+  }
 </script>
 
 <div class="caviarnine-dex-details">
   <DetailSection title="CaviarNine Pool Information">
     <DetailGrid>
-      <DetailItem 
-        label="Pool Ratio" 
-        value={`50/50 ${yieldSource.tokenSymbols?.join(':') || 'N/A'}`} 
-      />
+      <Ratio ratio={yieldSource.resourceRatio} tokens={yieldSource.tokens} ></Ratio>
       <DetailItem
         label="Fee Tier" 
-        value="0.30%" 
+        value={yieldSource.fee}
       />
-      <DetailItem
+      <!-- <DetailItem
         label="24h Volume" 
-        value={poolData?.volume24h || 'N/A'} 
-      />
-      <DetailItem 
-        label="7d Volume" 
-        value={yieldSource.volume7d || 'N/A'} 
-      />
-      <DetailItem 
-        label="Total Fees Earned" 
-        value={feeVaultData?.totalFees || 'N/A'} 
-      />
-      <DetailItem 
-        label="Pool Created" 
-        value={poolData?.createdAt ? new Date(poolData.createdAt).toLocaleDateString() : 'N/A'} 
-      />
+        value={yieldSource?.volume24h || 'N/A'} 
+      /> -->
     </DetailGrid>
-  </DetailSection>
-
-  <DetailSection title="Shape Liquidity Features">
-    <div class="feature-list">
-      <div class="feature-item">
-        <Icon icon="tabler:chart-line" width="16" />
-        <span>Dynamic fee adjustment</span>
-        <Badge color="green" size="small">Active</Badge>
-      </div>
-      <div class="feature-item">
-        <Icon icon="tabler:shield-chjeck" width="16" />
-        <span>MEV protection</span>
-        <Badge color="blue" size="small">Enabled</Badge>
-      </div>
-      <div class="feature-item">
-        <Icon icon="tabler:coins" width="16" />
-        <span>Concentrated liquidity</span>
-        <Badge color="purple" size="small">Available</Badge>
-      </div>
-    </div>
-  </DetailSection>
-
-  <DetailSection title="Risk Analysis">
-    <div class="risk-breakdown">
-      <div class="risk-item low">
-        <Icon icon="tabler:trending-down" width="16" />
-        <div class="risk-content">
-          <span class="risk-label">Impermanent Loss Risk</span>
-          <span class="risk-value">Low (~1.2% recent)</span>
-          <span class="risk-desc">Based on 30d price correlation</span>
-        </div>
-      </div>
-      <div class="risk-item low">
-        <Icon icon="tabler:shield" width="16" />
-        <div class="risk-content">
-          <span class="risk-label">Smart Contract Risk</span>
-          <span class="risk-value">Low</span>
-          <span class="risk-desc">Audited by Halborn Security</span>
-        </div>
-      </div>
-      <div class="risk-item medium">
-        <Icon icon="tabler:graph" width="16" />
-        <div class="risk-content">
-          <span class="risk-label">Liquidity Risk</span>
-          <span class="risk-value">Medium</span>
-          <span class="risk-desc">Moderate pool depth</span>
-        </div>
-      </div>
-    </div>
   </DetailSection>
 
   {#if yieldSource.isComposite && yieldSource.yieldSubSources}
@@ -117,7 +67,7 @@
 
   <DetailSection title="Actions">
     <div class="action-buttons">
-      <button class="action-btn primary">
+      <button onclick={onOpen} class="action-btn primary">
         <Icon icon="tabler:external-link" width="16" />
         Open in CaviarNine
       </button>

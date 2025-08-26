@@ -11,7 +11,6 @@
     const notable = [];
     
     if (row.features?.includes(Features.NO_IL)) notable.push('No IL');
-    if (row.features?.includes(Features.FEE_SHARING)) notable.push('Fee Share');
     if (row.features?.includes(Features.GOVERNANCE)) notable.push('Governance');
     if (row.features?.includes(Features.INSTANT_LIQUIDITY)) notable.push('Instant Exit');
     if (row.features?.includes(Features.CURATED)) notable.push('Curated');
@@ -31,7 +30,6 @@
   // Badge styling based on feature type
   let badgeStyle = $derived(() => {
     if (row.features?.includes(Features.NO_IL)) return 'no-risk';
-    if (row.features?.includes(Features.FEE_SHARING)) return 'premium';
     if (row.features?.includes(Features.GOVERNANCE)) return 'governance';
     if (row.features?.includes(Features.CURATED)) return 'curated';
     return 'standard';
@@ -40,15 +38,14 @@
 
 <div class="yield-source-cell" class:has-special-features={shouldShowSpecialBadge}>
   <TokenPairIcon 
-    tokenIcons={row.tokenIcons} 
-    tokenSymbols={row.tokenSymbols}
+    tokens={row.tokens} 
     size="md" 
   />
   
   <div class="yield-source-info">
     <div class="name-row">
       <span class="yield-source-name" title={row.name}>
-        {row.displayName || row.name}
+        {row.name}
       </span>
       
       <!-- Only show special feature badge if there are notable features -->
@@ -62,8 +59,8 @@
       {/if}
 
       <DappBadge
-        dappIcon={row.protocolIcon} 
-        dappName={row.protocolName}
+        dappIcon={row.dappIcon} 
+        dappName={row.dapp}
         size="sm" 
       />
     </div>
@@ -71,11 +68,11 @@
     <div class="yield-details">
       <div class="yield-source-type">
         {row.type}
-        {#if row.status === 'growing'}
+        <!-- {#if row.status === 'growing'}
           <span class="status-indicator growing">📈 Growing</span>
         {:else if row.status === 'volatile'}
           <span class="status-indicator volatile">📊 Volatile</span>
-        {/if}
+        {/if} -->
         
         <!-- Composite indicator -->
         {#if isComposite}

@@ -3,7 +3,12 @@ import mongoose, { Model, Schema } from 'mongoose';
 
 // YieldSourceMetrics Schema
 const YieldSourceMetrics = new Schema<YieldSourceMetricsDoc>({
-  yieldSourceId: { type: String, required: true, unique: true, index: true }, // ensure unique and indexed
+  yieldSourceAddress: {
+    type: String,
+    required: true,
+    unique: true,
+    index: true,
+  }, // ensure unique and indexed
   apy7dAvg: { type: String }, // BigNumber string
   apyStd7d: { type: String }, // BigNumber string
   tvlChange7d: { type: String }, // BigNumber string (%)

@@ -1,0 +1,14 @@
+{
+  "ticker_id": "resource_rdx1t580qxc7upat7lww4l2c4jckacafjeudxj5wpjrrct0p3e82sq4y75-resource_rdx1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxradxrd",
+  "base_currency": "resource_rdx1t580qxc7upat7lww4l2c4jckacafjeudxj5wpjrrct0p3e82sq4y75",
+  "target_currency": "resource_rdx1tknxxxxxxxxxradxrdxxxxxxxxx009923554798xxxxxxxxxradxrd",
+  "pool_id": "component_rdx1cp9w8443uyz2jtlaxnkcq84q5a5ndqpg05wgckzrnd3lgggpa080ed",
+  "last_price": "21224452.57254368212937304800",
+  "base_volume": "0.01351310000000000000",
+  "target_volume": "284043.08691333079899825500",
+  "liquidity_in_usd": "139184.98",
+  "bid": "21224452.57254368212937304800",
+  "ask": "21224452.57254368212937304800",
+  "high": "21224452.57254368212937304800",
+  "low": "20862047.50646242085286287400"
+}

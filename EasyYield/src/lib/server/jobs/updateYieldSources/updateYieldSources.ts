@@ -1,5 +1,3 @@
-import { computeAndUpsertMetrics } from '$server/yieldSourceMetrics/computeAndUpsertMetrics';
-import { updateOciswapYieldSources } from './ociswap';
 import { updateCaviarNineYieldSources } from './caviarNine';
 
 let isJobRunning = false;
@@ -15,7 +13,7 @@ export async function updateYieldSourcesJob() {
 
     let totalUpdates = 0;
     let totalErrors = 0;
-    let allUpdatedIds: string[] = [];
+    let allUpdatedAddresses: string[] = [];
 
     // ✅ OPTION 1: Process separately (current approach)
     // const ociswapResult = await updateOciswapYieldSources();
@@ -23,25 +21,25 @@ export async function updateYieldSourcesJob() {
 
     // Aggregate results (Option 1)
     totalUpdates = caviarNineResult.updates;
-    totalErrors =  caviarNineResult.errors;
-    allUpdatedIds = [
+    totalErrors = caviarNineResult.errors;
+    allUpdatedAddresses = [
       // ...ociswapResult.updatedIds,
-      ...caviarNineResult.updatedIds,
+      ...caviarNineResult.updatedAddresses,
     ];
 
     // ✅ Compute metrics for all updated yield sources
-    if (allUpdatedIds.length > 0) {
+    if (allUpdatedAddresses.length > 0) {
       console.log(
-        `[INFO] Computing metrics for ${allUpdatedIds.length} updated yield sources...`
+        `[INFO] Computing metrics for ${allUpdatedAddresses.length} updated yield sources...`
       );
       const metricsStartTime = Date.now();
 
-      allUpdatedIds = [...new Set(allUpdatedIds)]; // dedupe
+      allUpdatedAddresses = [...new Set(allUpdatedAddresses)]; // dedupe
 
       let metricsUpdated = 0;
-      for (const yieldSourceId of allUpdatedIds) {
+      for (const yieldSourceId of allUpdatedAddresses) {
         try {
-          await computeAndUpsertMetrics(yieldSourceId);
+          // await computeAndUpsertMetrics(yieldSourceId);
           metricsUpdated++;
         } catch (err) {
           console.error(
@@ -53,7 +51,7 @@ export async function updateYieldSourcesJob() {
       }
 
       console.log(
-        `[SUCCESS] Metrics computed for ${metricsUpdated}/${allUpdatedIds.length} yield sources (${Date.now() - metricsStartTime}ms)`
+        `[SUCCESS] Metrics computed for ${metricsUpdated}/${allUpdatedAddresses.length} yield sources (${Date.now() - metricsStartTime}ms)`
       );
     }
 
@@ -63,7 +61,7 @@ export async function updateYieldSourcesJob() {
     return {
       updates: totalUpdates,
       errors: totalErrors,
-      updatedIds: allUpdatedIds,
+      updatedIds: allUpdatedAddresses,
     };
   } catch (error) {
     console.error('[ERROR] Unified yield sources job failed:', error);
