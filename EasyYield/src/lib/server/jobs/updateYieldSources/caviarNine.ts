@@ -6,23 +6,22 @@ import type {
   PoolInfo,
   PoolInfoFungibleResource,
 } from '$shared/typings/CaviarNine';
-import type { RawPoolData } from '$server/services/source/rawDataExtractor';
 import { fetchAstrolescentPrices } from '$server/api/astrolescent/astrolescent';
 import {
-  fetchCaviarNineFeeVaults,
+  fetchCaviarNineLSUPool,
   fetchCaviarNinePool,
   fetchCaviarNineTickers,
 } from '$server/api/caviarNine/pools';
 import { RadixGatewayClient } from '$server/api/gateway/gatewayClient';
 import { tokenCache } from './tokenCacheInstance';
 import type { TokenMetadata } from '$server/services/tokenCache';
-import { DAPP_MAPPINGS } from '$lib/constants';
+import { CAVIARNINE_LSU_POOL_ADDRESS, DAPP_MAPPINGS } from '$lib/constants';
 import {
   updateYieldSourcesBatch,
   type RawYieldSource,
 } from './unifiedYieldSourceUpdater';
 import { BigNumber } from 'bignumber.js';
-import { writeFileSync } from 'fs';
+import { extractPoolInfo } from '$server/utils/pool';
 
 const addPrices = async (pools: BaseExtractedPoolInfo[]) => {
   const allTokenAddresses = pools.flatMap((p) =>
@@ -67,6 +66,241 @@ async function processTickersToRawYieldSource(
   return rawYieldSources;
 }
 
+async function processLSUToRawYieldSource(
+  lsu: BaseExtractedPoolInfo
+): Promise<RawYieldSource | null> {
+  if (!lsu.address || !lsu.fungibleResources?.length) {
+    return null;
+  }
+
+  const [lsuWPrices] = await addPrices([lsu]);
+
+  try {
+    const tokens = lsuWPrices.fungibleResources;
+    const tvl = BigNumber(calculateTVL(tokens));
+
+    // Calculate weighted average APY from individual LSU tokens
+    const { weightedApy, totalValidators } = await calculateLSUPoolAPY(
+      tokens,
+      lsu
+    );
+
+    const apy = weightedApy;
+    const fee = '0.0005'; // Standard liquidity fee for LSU pools (0.05%)
+
+    // Generate appropriate name for LSU pool
+    const poolName = `LSU Multi-Validator Pool (${totalValidators} validators)`;
+
+    return {
+      address: lsuWPrices.address,
+      name: poolName,
+      tokens,
+      tvl: tvl.toString(),
+      apy,
+
+      type: YieldSourceType.LSU_POOL,
+
+      status: undefined,
+
+      dapp: Dapps.CAVIARNINE,
+      dappIcon: DAPP_MAPPINGS[Dapps.CAVIARNINE].fallbackIcon,
+
+      volume24h: '0',
+
+      features: extractPoolTags(lsu, null),
+      yieldSubSources: [
+        {
+          type: 'liquid_staking',
+          apy,
+          risk: 'medium',
+          description: `Yield from liquid staking across ${totalValidators} validators, providing staking rewards while maintaining liquidity in a diversified pool.`,
+          fee,
+          isActive: true,
+          lastUpdated: new Date(),
+        },
+      ],
+      raw: {
+        ...lsu,
+      },
+    };
+  } catch (error) {
+    console.warn(`[LSU-RAW] Failed to process LSU pool ${lsu.address}:`, error);
+    return null;
+  }
+}
+
+// Helper function to query a key-value store using Radix Gateway API
+async function queryKeyValueStore(
+  kvsAddress: string,
+  key: string
+): Promise<string | null> {
+  try {
+    const gatewayClient = RadixGatewayClient.getInstance();
+    // Use your existing Gateway API client to query the key-value store
+    // This is a placeholder - replace with your actual Gateway API implementation
+    const response = await gatewayClient.state.getAllEntityMetadata(kvsAddress);
+
+    console.log(response);
+    // Parse the response to extract the validator address for the given LSU key
+    // The exact implementation depends on how your Gateway API client works
+    // and the structure of the key-value store response
+
+    console.warn(
+      `[TODO] Implement actual key-value store query for ${kvsAddress} with key ${key}`
+    );
+    return null; // Replace with actual implementation
+  } catch (error) {
+    console.error(
+      `[KVS-QUERY] Failed to query key-value store ${kvsAddress} for key ${key}:`,
+      error
+    );
+    return null;
+  }
+}
+
+// Helper function to get validator address from LSU resource address using the pool's mapping
+async function getLSUValidatorMapping(
+  lsuResourceAddress: string,
+  lsuPoolData: BaseExtractedPoolInfo
+): Promise<string | null> {
+  try {
+    const lsuToValidatorKVS = lsuPoolData.state?.validator_address_map;
+    console.log(lsuPoolData);
+    if (!lsuToValidatorKVS) {
+      console.warn(
+        `[LSU-MAPPING] No lsu_to_validator key-value store found in pool data`
+      );
+      return null;
+    }
+
+    // Query the key-value store for this LSU resource address
+    // This would depend on how you access Radix key-value stores in your codebase
+    // You might need to use the Gateway API to query the key-value store
+    const validatorAddress = await queryKeyValueStore(
+      lsuToValidatorKVS,
+      lsuResourceAddress
+    );
+
+    if (!validatorAddress) {
+      console.warn(
+        `[LSU-MAPPING] No validator found for LSU ${lsuResourceAddress} in mapping`
+      );
+      return null;
+    }
+
+    console.log(
+      `[LSU-MAPPING] Mapped LSU ${lsuResourceAddress} to validator ${validatorAddress}`
+    );
+    return validatorAddress;
+  } catch (error) {
+    console.error(
+      `[LSU-MAPPING] Failed to get validator mapping for LSU ${lsuResourceAddress}:`,
+      error
+    );
+    return null;
+  }
+}
+
+// Helper function to get validator APY from LSU resource address
+async function getValidatorAPYFromLSU(
+  lsuResourceAddress: string,
+  lsuPoolData: BaseExtractedPoolInfo
+): Promise<string | null> {
+  try {
+    // Get the specific validator for this individual LSU token
+    const validatorAddress = await getLSUValidatorMapping(
+      lsuResourceAddress,
+      lsuPoolData
+    );
+
+    if (!validatorAddress) {
+      console.warn(
+        `[LSU-VALIDATOR-APY] No validator mapping found for LSU: ${lsuResourceAddress}`
+      );
+      return null;
+    }
+
+    // Fetch all validators from gateway
+    const gatewayClient = RadixGatewayClient.getInstance();
+    const validators = await gatewayClient.state.getValidators();
+
+    if (!validators || validators.items.length === 0) {
+      console.warn(`[LSU-VALIDATOR-APY] No validators found from gateway`);
+      return null;
+    }
+
+    // Find the specific validator for this LSU token
+    const specificValidator = validators.items.find(
+      (v) => v.address === validatorAddress
+    );
+
+    if (!specificValidator) {
+      console.warn(
+        `[LSU-VALIDATOR-APY] Validator ${validatorAddress} not found in gateway data`
+      );
+      return null;
+    }
+
+    const apy = specificValidator.apy || '0';
+    console.log(
+      `[LSU-VALIDATOR-APY] Found APY ${apy}% for validator ${validatorAddress} (LSU: ${lsuResourceAddress})`
+    );
+
+    return apy;
+  } catch (error) {
+    console.error(
+      `[LSU-VALIDATOR-APY] Failed to get APY for LSU ${lsuResourceAddress}:`,
+      error
+    );
+    return null;
+  }
+}
+// Helper function to calculate weighted APY from LSU tokens
+async function calculateLSUPoolAPY(
+  tokens: PoolInfoFungibleResource,
+  lsu: BaseExtractedPoolInfo
+): Promise<{
+  weightedApy: string;
+  totalValidators: number;
+}> {
+  let totalValue = BigNumber(0);
+  let weightedAPYSum = BigNumber(0);
+  let activeValidators = 0;
+
+  for (const token of tokens) {
+    const tokenAmount = BigNumber(token.amount);
+    const tokenPrice = BigNumber(token.price || 0);
+    const tokenValue = tokenAmount.multipliedBy(tokenPrice);
+
+    // Skip tokens with zero amount or price
+    if (tokenValue.isZero()) {
+      continue;
+    }
+
+    // Get validator APY for this LSU token
+    const validatorAPY = await getValidatorAPYFromLSU(
+      token.resourceAddress,
+      lsu
+    );
+
+    if (validatorAPY && !BigNumber(validatorAPY).isZero()) {
+      const weightedContribution = tokenValue.multipliedBy(validatorAPY);
+      weightedAPYSum = weightedAPYSum.plus(weightedContribution);
+      totalValue = totalValue.plus(tokenValue);
+      activeValidators++;
+    }
+  }
+
+  const weightedApy = totalValue.isZero()
+    ? '0'
+    : weightedAPYSum.dividedBy(totalValue).toString();
+
+  return {
+    weightedApy,
+    totalValidators: activeValidators,
+  };
+}
+
 function calculateTVL(
   fungibleResources: PoolInfo['fungibleResources']
 ): string {
@@ -103,7 +337,7 @@ export const calculateApy = (sourceType: YieldSourceType) => {
  */
 export function extractPoolTags(
   pool: BaseExtractedPoolInfo,
-  ticker: CaviarNineTicker
+  ticker?: CaviarNineTicker
 ): string[] {
   const tags = new Set<string>();
 
@@ -125,7 +359,7 @@ export function extractPoolTags(
   }
 
   // 5. Price classification
-  const price = parseFloat(ticker.last_price);
+  const price = parseFloat(ticker?.last_price ?? 'NaN');
   if (!isNaN(price)) {
     tags.add(
       price > 1
@@ -137,7 +371,9 @@ export function extractPoolTags(
   }
 
   // 6. 24h volume classification
-  const vol = parseFloat(ticker.base_volume) + parseFloat(ticker.target_volume);
+  const vol =
+    parseFloat(ticker?.base_volume ?? 'NaN') +
+    parseFloat(ticker?.target_volume ?? 'NaN');
   if (!isNaN(vol)) {
     tags.add(
       vol > 1_000_000
@@ -149,16 +385,16 @@ export function extractPoolTags(
   }
 
   // 7. Spread tightness
-  const bid = parseFloat(ticker.bid),
-    ask = parseFloat(ticker.ask);
+  const bid = parseFloat(ticker?.bid ?? 'NaN');
+  const ask = parseFloat(ticker?.ask ?? 'NaN');
   if (!isNaN(bid) && !isNaN(ask) && ask > 0) {
     const spreadRatio = (ask - bid) / ask;
     tags.add(spreadRatio > 0.005 ? 'wide spread' : 'tight spread');
   }
 
   // 8. Volatility range
-  const high = parseFloat(ticker.high),
-    low = parseFloat(ticker.low);
+  const high = parseFloat(ticker?.high ?? 'NaN');
+  const low = parseFloat(ticker?.low ?? 'NaN');
   if (!isNaN(high) && !isNaN(low) && low > 0) {
     const range = (high - low) / low;
     tags.add(range > 0.1 ? 'volatile' : 'stable');
@@ -188,7 +424,6 @@ async function tickerToYieldSource(
     if (pool) {
       const data = await fetchCaviarNinePool(pool?.address);
       apy = BigNumber(data.apy_perc).multipliedBy(100).toString();
-      console.log(data);
       fee = data.fees_perc;
     }
   } catch (error) {
@@ -208,6 +443,8 @@ async function tickerToYieldSource(
 
     dapp: Dapps.CAVIARNINE,
     dappIcon: DAPP_MAPPINGS[Dapps.CAVIARNINE].fallbackIcon,
+
+    volume24h: '0',
 
     features: extractPoolTags(pool!, ticker),
     yieldSubSources: [
@@ -248,7 +485,7 @@ async function getPools(
       }
 
       // For a typical 2-resource pool, there should be exactly 2 resources
-      if (resources.length !== 2) {
+      if (resources.length < 2) {
         console.log(`Expected 2 resources in pool, found ${resources.length}`);
         continue;
       }
@@ -293,94 +530,34 @@ async function getPools(
   }
 }
 
-function extractPoolInfo(
-  pool: StateEntityDetailsVaultResponseItem
-): BaseExtractedPoolInfo {
-  // Extract core identifiers
-  const address = pool.address;
-
-  // Extract fungible resource addresses and amounts
-  const fungibleResources = pool.fungible_resources.items.map((fr) => {
-    const resourceAddress = fr.resource_address;
-    const vault = fr.vaults.items[0];
-    const amount = vault ? vault.amount : '0';
-    const vaultAddress = vault ? vault.vault_address : null;
-    return { resourceAddress, amount, vaultAddress };
-  });
-
-  // Extract metadata fields as key-value pairs
-  const metadata: any = {};
-  pool.metadata.items.forEach((item) => {
-    let value = null;
-    if (item.value.typed) {
-      if (item.value.typed.type === 'String') {
-        value = item.value.typed.value;
-      } else if (item.value.typed.type === 'StringArray') {
-        value = item.value.typed.values;
-      } else if (item.value.typed.type === 'GlobalAddress') {
-        value = item.value.typed.value;
-      }
-    }
-    metadata[item.key] = value;
-  });
-
-  // Extract key state fields from the details object
-  const stateFields: { [key: string]: any } = {};
-  if (
-    pool.details &&
-    pool.details.type === 'Component' &&
-    pool.details.state &&
-    //@ts-expect-error
-    pool.details.state.fields
-  ) {
-    //@ts-expect-error
-    pool.details.state.fields.forEach((field: any) => {
-      stateFields[field.field_name] = field.value;
-    });
-  }
-
-  // Extract roles overview
-  const roles = {
-    //@ts-expect-error
-    owner: pool.details?.role_assignments?.owner || null,
-    //@ts-expect-error
-    entries: pool.details?.role_assignments?.entries || [],
-  };
-
-  return {
-    address,
-    fungibleResources,
-    metadata,
-    state: stateFields,
-    roles,
-  };
-}
-
 export async function getCaviarSources(): Promise<RawYieldSource[]> {
   try {
     // Fetch all data sources in parallel
     const [
       tickersResult,
-      feeVaultsResult,
+      // feeVaultsResult,
+      lsuPoolResult,
       // hyperStakeResult,
-      // lsuPoolResult,
     ] = await Promise.allSettled([
       fetchCaviarNineTickers(),
-      fetchCaviarNineFeeVaults(),
+      // fetchCaviarNineFeeVaults(),
+      fetchCaviarNineLSUPool(),
       // fetchCaviarNineHyperStakeRaw(),
       // fetchCaviarNineLSUPoolRaw(),
     ]);
 
     const rawSources: RawYieldSource[] = [];
     // Process tickers
-    if (
-      tickersResult.status === 'fulfilled' &&
-      feeVaultsResult.status === 'fulfilled'
-    ) {
+    if (tickersResult.status === 'fulfilled') {
       const dexSources = await processTickersToRawYieldSource(
-        tickersResult.value.tickers.slice(0, 100)
+        tickersResult.value.tickers.slice(0, 1)
       );
       rawSources.push(...dexSources);
+    }
+    // Process tickers
+    if (lsuPoolResult.status === 'fulfilled') {
+      const lsu = await processLSUToRawYieldSource(lsuPoolResult.value);
+      if (lsu) rawSources.push(lsu);
     }
 
     console.log(

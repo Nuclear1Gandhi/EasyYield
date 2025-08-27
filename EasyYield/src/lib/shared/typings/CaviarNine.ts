@@ -265,7 +265,10 @@ export type BaseExtractedPoolInfo = {
   fungibleResources: ExtractedPoolFungibleResource[];
   metadata: ExtractedPoolMetadata;
   state: {
+    validator_address_map?: string | null;
     bin_span?: number;
+    lsu_to_validator?: string | null;
+    token_validator?: string | null;
     tick_index_current?: number | null;
     lower_limit?: string; // decimals as strings
     upper_limit?: string;

@@ -7,6 +7,7 @@
   import DetailItem from '../Common/DetailItem.svelte';
   import { Dapps, YieldSourceType } from '$shared/typings/YieldSource';
   import Ratio from '../Common/Ratio.svelte';
+  import { CAVIARNINE_APP_URL } from '$lib/constants';
 
   type Props = {
     yieldSource: YieldSourceDisplayData;
@@ -22,7 +23,7 @@
     switch (yieldSource.dapp) {
       case Dapps.CAVIARNINE: {
         if (yieldSource.type === YieldSourceType.DEX_PAIR) {
-          window.open('', '_blank')
+          window.open(`${CAVIARNINE_APP_URL}/earn/shape-liquidity/pool/${yieldSource.yieldSourceAddress}`, '_blank')
         }
       }
       default:

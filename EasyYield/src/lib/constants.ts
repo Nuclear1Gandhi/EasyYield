@@ -43,3 +43,4 @@ export const DAPP_MAPPINGS = {
 export const DAYS_PER_YEAR = 365;
 
 export const CAVIARNINE_TRADING_FEE = 0.03;
+export const CAVIARNINE_APP_URL = 'https://www.caviarnine.com';
