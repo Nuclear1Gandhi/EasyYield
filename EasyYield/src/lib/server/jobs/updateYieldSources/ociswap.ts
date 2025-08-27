@@ -119,7 +119,7 @@ export async function updateOciswapYieldSources(): Promise<{
       }
 
       await YieldSourceModel.findOneAndUpdate(
-        { yieldSourceId: pool.address },
+        { yieldSourceAddress: pool.address },
         {
           $set: {
             name: pool.name,
@@ -164,7 +164,7 @@ export async function updateOciswapYieldSources(): Promise<{
 
       // Create historical record
       await HistoricalYieldModel.create({
-        yieldSourceId: pool.address,
+        yieldSourceAddress: pool.address,
         apy: apy.toNumber(),
         tvl: tvl.toNumber(),
         timestamp: now,

@@ -37,13 +37,13 @@ export async function updateYieldSourcesJob() {
       allUpdatedAddresses = [...new Set(allUpdatedAddresses)]; // dedupe
 
       let metricsUpdated = 0;
-      for (const yieldSourceId of allUpdatedAddresses) {
+      for (const yieldSourceAddress of allUpdatedAddresses) {
         try {
           // await computeAndUpsertMetrics(yieldSourceId);
           metricsUpdated++;
         } catch (err) {
           console.error(
-            `[ERROR] Failed to compute metrics for ${yieldSourceId}:`,
+            `[ERROR] Failed to compute metrics for ${yieldSourceAddress}:`,
             err
           );
           totalErrors++;

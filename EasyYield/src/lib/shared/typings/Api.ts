@@ -1,7 +1,4 @@
-import type { PoolInfoFungibleResource } from './CaviarNine';
 import type {
-  YieldSourceType,
-  YieldSubSource,
   Features,
   Dapps,
   ProtocolMetadata,
@@ -62,7 +59,7 @@ export interface YieldSourceData {
 }
 
 export interface YieldSourcePosition {
-  yieldSourceId: string;
+  yieldSourceAddress: string;
   amount: string;
   value: string;
   apy: string;

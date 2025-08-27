@@ -99,7 +99,6 @@ export class TVLProcessor {
         );
       }
     }
-    console.log(pool.name, pool.tokens, totalValue);
     return {
       poolId: pool.poolId,
       tvlUsd: totalValue.toFixed(2),

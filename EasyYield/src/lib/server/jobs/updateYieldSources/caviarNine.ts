@@ -188,8 +188,8 @@ async function tickerToYieldSource(
     if (pool) {
       const data = await fetchCaviarNinePool(pool?.address);
       apy = BigNumber(data.apy_perc).multipliedBy(100).toString();
-      fee = data.fees_perc;
       console.log(data);
+      fee = data.fees_perc;
     }
   } catch (error) {
     console.error(error);
@@ -378,7 +378,7 @@ export async function getCaviarSources(): Promise<RawYieldSource[]> {
       feeVaultsResult.status === 'fulfilled'
     ) {
       const dexSources = await processTickersToRawYieldSource(
-        tickersResult.value.tickers.slice(22, 23)
+        tickersResult.value.tickers.slice(0, 100)
       );
       rawSources.push(...dexSources);
     }

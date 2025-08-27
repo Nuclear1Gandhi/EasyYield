@@ -24,7 +24,6 @@ export const GET: RequestHandler = async () => {
     const displayData: YieldSourceDisplayData<Dapps.CAVIARNINE>[] =
       yieldSources.map((s) => {
         const m = metricsMap[s.yieldSourceAddress] || {};
-        console.log(s.tokens, getResourceRatio(s.tokens));
         return {
           ...s,
           lastUpdated: s.lastUpdated || new Date(),

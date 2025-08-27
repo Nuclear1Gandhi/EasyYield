@@ -48,7 +48,7 @@ export async function seedYieldSources() {
       });
       ociswapCount++;
       console.log(
-        `\x1b[32m[SUCCESS]\x1b[0m Inserted: ${doc.name} (${doc.yieldSourceId})`
+        `\x1b[32m[SUCCESS]\x1b[0m Inserted: ${doc.name} (${doc.yieldSourceAddress})`
       );
     }
     console.log(

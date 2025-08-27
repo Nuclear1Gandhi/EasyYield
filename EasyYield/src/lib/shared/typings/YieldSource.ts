@@ -81,7 +81,7 @@ export type YieldSubSource = {
 };
 
 export type YieldSourceMetrics = {
-  yieldSourceId: string;
+  yieldSourceAddress: string;
   apy7dAvg: string; // BigNumber string
   apyStd7d: string; // BigNumber string
   tvlChange24h: string;

@@ -3,18 +3,20 @@ import type { RequestHandler } from '@sveltejs/kit';
 
 export const GET: RequestHandler = async ({ url }) => {
   try {
-    const yieldSourceId = url.searchParams.get('yieldSourceId');
+    const yieldSourceAddress = url.searchParams.get('yieldSourceAddress');
     const limit = Number(url.searchParams.get('limit') ?? '50');
     const skip = Number(url.searchParams.get('skip') ?? '0');
 
-    if (!yieldSourceId) {
+    if (!yieldSourceAddress) {
       return new Response(
-        JSON.stringify({ error: 'yieldSourceId query param required' }),
+        JSON.stringify({ error: 'yieldSourceAddress query param required' }),
         { status: 400 }
       );
     }
 
-    const histories = await HistoricalYieldModel.find({ yieldSourceId })
+    const histories = await HistoricalYieldModel.find({
+      yieldSourceAddress: yieldSourceAddress,
+    })
       .sort({ timestamp: -1 })
       .limit(limit)
       .skip(skip)

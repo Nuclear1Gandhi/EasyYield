@@ -17,7 +17,6 @@
   const maxVisible = 3; // Show max 3 tokens
   const visibileTokens = tokens.slice(0, maxVisible);
   const hasMore = tokens.length > maxVisible;
-  console.log(visibileTokens)
 </script>
 
 <div class="token-pair-icon {sizeClasses[size]}">

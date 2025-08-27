@@ -4,18 +4,22 @@ import BigNumber from 'bignumber.js';
 export const getResourceRatio = (tokens: PoolInfoFungibleResource[]) => {
   const resourceA = tokens[0];
   const resourceB = tokens[1];
-  const amountA = new BigNumber(resourceA.amount); // token A amount as string
-  const decimalsA = resourceA.decimals; // number of decimals for token A
 
-  const amountB = new BigNumber(resourceB.amount); // token B amount as string
-  const decimalsB = resourceB.decimals; // number of decimals for token B
+  const amountA = new BigNumber(resourceA.amount);
+  const amountB = new BigNumber(resourceB.amount);
 
-  // Convert to standard decimal values accounting for decimals
-  const standardizedA = amountA.dividedBy(new BigNumber(10).pow(decimalsA));
-  const standardizedB = amountB.dividedBy(new BigNumber(10).pow(decimalsB));
+  // Total amount = A + B
+  const totalAmount = amountA.plus(amountB);
 
-  // Ratio of A to B
-  const ratioAtoB = standardizedA.dividedBy(standardizedB).times(10);
+  // Ratio of A to total (0.0 to 1.0)
+  const ratioA = amountA.dividedBy(totalAmount);
 
-  return ratioAtoB;
+  // Set minimum threshold - if ratio is extremely small, set to 0.01
+  const minThreshold = new BigNumber(0.01);
+
+  if (ratioA.lt(minThreshold)) {
+    return minThreshold.toString(); // "0.01"
+  }
+
+  return ratioA.toFixed(2);
 };

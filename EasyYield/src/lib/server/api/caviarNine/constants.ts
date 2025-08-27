@@ -1,6 +1,6 @@
 export const CAVIARNINE_CORE_API_URL = 'https://api-core.caviarnine.com/v1.0';
 export const CAVIARNINE_RATE_LIMIT_KEY = 'caviarnine_api';
-export const CAVIARNINE_MAX_REQUESTS_PER_MINUTE = 5;
+export const CAVIARNINE_MAX_REQUESTS_PER_MINUTE = 10;
 export const CAVIARNINE_RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
 export const CAVIARNINE_REQUEST_TIMEOUT_MS = 30000; // 30 seconds
 export const CAVIARNINE_MAX_RETRIES = 3;

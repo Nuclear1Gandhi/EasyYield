@@ -24,7 +24,7 @@
     expandable?: boolean;
     expandedRowRender?: (item: RowItem) => { component: any, props: any };
     defaultExpandedRows?: Set<string>;
-    getRowId?: (item: RowItem) => string; // Function to get unique ID for each row
+    getRowId: (item: RowItem) => string; // Function to get unique ID for each row
   };
 
   let { 
@@ -54,7 +54,7 @@
   let expandedRows = $state(new Set<string>(defaultExpandedRows || []));
 
   function toggleRowExpansion(item: RowItem) {
-    const id = getRowId?.(item) || String(item.id || item._id);
+    const id = getRowId(item) 
     
     if (expandedRows.has(id)) {
       expandedRows.delete(id);
@@ -65,7 +65,7 @@
   }
 
   function isRowExpanded(item: RowItem): boolean {
-    const id = getRowId?.(item) || String(item.id || item._id);
+    const id = getRowId(item)
     return expandedRows.has(id);
   }
 
@@ -258,7 +258,7 @@
       </td>
     </tr>
   {:else}
-    {#each displayedData as item, index (item.id)}
+    {#each displayedData as item, index (getRowId(item))}
       <tr class={rowClass ? rowClass(item, index) : ''}>
         {#each columns as column}
           <td>

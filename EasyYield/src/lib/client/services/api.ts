@@ -81,10 +81,13 @@ export const apiService = {
   },
 
   // Get historical data for sparklines
-  async getYieldSourceHistory(yieldSourceId: string, days = 7): Promise<any[]> {
+  async getYieldSourceHistory(
+    yieldSourceAddress: string,
+    days = 7
+  ): Promise<any[]> {
     try {
       return await api
-        .get(`/api/v1/protected/yield-sources/${yieldSourceId}/history`, {
+        .get(`/api/v1/protected/yield-sources/${yieldSourceAddress}/history`, {
           searchParams: { days: days.toString() },
         })
         .json<YieldSourceResponse[]>();

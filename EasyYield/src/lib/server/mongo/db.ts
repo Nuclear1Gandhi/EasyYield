@@ -14,12 +14,12 @@ export async function connectToDatabase() {
     dbName: process.env.MONGODB_DB_NAME || undefined,
   });
 
-  // Create indexes after connection
-  await YieldSourceModel.collection.createIndex(
-    { yieldSourceId: 1 },
-    { unique: true }
-  );
-  await YieldSourceModel.collection.createIndex({ type: 1, currentApy: -1 });
+  // // Create indexes after connection
+  // await YieldSourceModel.collection.createIndex(
+  //   { yieldSourceId: 1 },
+  //   { unique: true }
+  // );
+  // await YieldSourceModel.collection.createIndex({ type: 1, currentApy: -1 });
 
   isConnected = true;
 }

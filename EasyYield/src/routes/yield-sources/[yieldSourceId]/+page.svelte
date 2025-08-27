@@ -10,14 +10,14 @@
   import ActionPanel from '$client/dashboards/yieldSource/ActionPanel.svelte';
 
   // Get yield source ID from URL
-  let yieldSourceId = $state(page.params.yieldSourceId);
+  let yieldSourceAddress = $state(page.params.yieldSourceId);
   
   // Subscribe to detail store
   let detailData = $derived($yieldSourceDetailStore);
   
   onMount(() => {
-    if (yieldSourceId) {
-      yieldSourceDetailStore.loadYieldSource(yieldSourceId);
+    if (yieldSourceAddress) {
+      yieldSourceDetailStore.loadYieldSource(yieldSourceAddress);
     }
   });
 
@@ -27,7 +27,7 @@
 
   function handleAddToWatchlist() {
     // TODO: Implement watchlist functionality
-    console.log('Add to watchlist:', yieldSourceId);
+    console.log('Add to watchlist:', yieldSourceAddress);
   }
 
   function handleShare() {
@@ -37,7 +37,7 @@
 </script>
 
 <svelte:head>
-  <title>{detailData.yieldSource?.displayName || 'Loading...'} - EasyYield</title>
+  <title>{detailData.yieldSource?.name || 'Loading...'} - EasyYield</title>
 </svelte:head>
 
 <div class="yield-source-detail">

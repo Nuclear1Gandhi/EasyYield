@@ -9,8 +9,8 @@
   const tokenA = tokens[0];
   const tokenB = tokens[1];
 
-  const percentageA = BigNumber(ratio).multipliedBy(100).toFixed(1);
-  const percentageB = BigNumber(100).minus(percentageA).toFixed(1);
+  const percentageA = BigNumber(ratio).multipliedBy(100).toString()
+  const percentageB = BigNumber(100).minus(percentageA).toString();
 </script>
 
 <div class="detail-item">
