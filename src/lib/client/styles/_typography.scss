@@ -1,0 +1,88 @@
+/* _typography.scss */
+@use 'sass:map';
+@use 'variables' as *;
+@use 'mixins' as *;
+
+/* Base font sizes (mobile-first) */
+html {
+  font-size: 100%; /* 16px */
+}
+
+body {
+  font-family: var(--font-inter);
+  line-height: 1.6;
+  color: var(--fg);
+}
+
+/* Headings */
+h1,
+.h1 {
+  font-size: 2rem;
+  line-height: 1.2;
+  font-weight: 700;
+}
+h2,
+.h2 {
+  font-size: 1.75rem;
+  line-height: 1.25;
+  font-weight: 600;
+}
+h3,
+.h3 {
+  font-size: 1.5rem;
+  line-height: 1.3;
+  font-weight: 600;
+}
+h4,
+.h4 {
+  font-size: 1.25rem;
+  line-height: 1.35;
+  font-weight: 500;
+}
+h5,
+.h5 {
+  font-size: 1rem;
+  line-height: 1.4;
+  font-weight: 500;
+}
+h6,
+.h6 {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+/* Responsive headings */
+@include respond-to(md) {
+  h1 {
+    font-size: 2.5rem;
+  }
+  h2 {
+    font-size: 2rem;
+  }
+  h3 {
+    font-size: 1.75rem;
+  }
+}
+
+/* Paragraphs */
+p {
+  margin-bottom: map.get($spacing, md);
+}
+
+/* Links */
+a {
+  color: var(--primary);
+  text-decoration: none;
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+/* Code */
+code {
+  // font-family: var(--font-mono);
+  background: var(--gray-100);
+  padding: 0 map.get($spacing, xs);
+  border-radius: 0.25rem;
+}

@@ -1,0 +1,28 @@
+{
+	"/": [
+		"src/routes/+page.server.ts"
+	],
+	"/api/auth": [
+		"src/routes/api/auth/+server.ts"
+	],
+	"/api/cron/update-yield-sources": [
+		"src/routes/api/cron/update-yield-sources/+server.ts"
+	],
+	"/api/v1/protected": [
+		"src/routes/api/v1/protected/+server.ts"
+	],
+	"/api/v1/protected/dapps": [
+		"src/routes/api/v1/protected/dapps/+server.ts"
+	],
+	"/api/v1/protected/historical": [
+		"src/routes/api/v1/protected/historical/+server.ts"
+	],
+	"/api/v1/protected/yield-sources": [
+		"src/routes/api/v1/protected/yield-sources/+server.ts"
+	],
+	"/components": [],
+	"/dapps": [
+		"src/routes/dapps/+page.server.ts"
+	],
+	"/yield-sources/[yieldSourceId]": []
+}
