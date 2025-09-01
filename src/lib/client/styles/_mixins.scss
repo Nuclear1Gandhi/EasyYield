@@ -1,0 +1,28 @@
+@use 'sass:map';
+
+@use 'variables' as *;
+
+/* Mobile-first breakpoint mixin */
+@function bp($size) {
+  @return map.get($breakpoints, $size);
+}
+
+@mixin respond-to($size) {
+  @media (min-width: bp($size)) {
+    @content;
+  }
+}
+
+/* Flowbite component override helper */
+@mixin flowbite-component($component) {
+  @at-root .fb-#{$component} {
+    @content;
+  }
+}
+
+/* Center block horizontally & vertically */
+@mixin center-flex {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
